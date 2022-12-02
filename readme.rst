@@ -1,11 +1,25 @@
 Robot driver
 ============
 
-Driver for three bidirectional heavy duty 12V DC motors (six output channels in total). Three encoder input channels for motor position.
+Wifi heavy duty servo motor controller
 
-[video]
+https://github.com/turingbirds/robot_controller/blob/main/1%20dec%202022%20test.mp4?raw=true
 
-ESP32 controller and one BTS???? driver for each channel. Battery powered with a 14.4V Makita power tool battery.
+
+Features
+--------
+
+- 3 bidirectional motors (6 output channels in total)
+- 3 encoder input channels for motor position.
+- Wireless low-latency interface via MQTT
+- Battery powered with a 14.4V Makita power tool battery.
+
+
+Tech
+----
+
+- ESP32 controller
+- one BTS???? driver for each channel (6 total)
 
 PCB fits the case of a Makita battery charger.
 
