@@ -3,7 +3,7 @@ Robot driver
 
 Wifi heavy duty servo motor controller
 
-https://github.com/turingbirds/robot_controller/blob/main/1%20dec%202022%20test.mp4?raw=true
+https://github.com/turingbirds/robot_controller/raw/main/1%20dec%202022%20test.mp4
 
 
 Features
