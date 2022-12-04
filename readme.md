@@ -5,7 +5,7 @@ Wifi heavy duty servo motor controller
 
 https://user-images.githubusercontent.com/1014092/205401948-c3db500c-c33b-486b-9b15-0c6e07ba4ee2.mp4
 
-[[rear.jpeg]]
+![rear](https://user-images.githubusercontent.com/1014092/205522420-85adf3dc-d7ae-46b3-922f-ef1716646d62.jpeg)
 
 
 Features
@@ -21,9 +21,7 @@ Tech
 ----
 
 - ESP32 controller
-- one BTS???? driver for each channel (6 total)
+- one BTS7960 driver for each motor (3 motors wired as H-bridge; 6 output channels in total)
 - Inrush current limiter via low-side series transistor
 
 PCB fits the case of a Makita battery charger.
-
-
