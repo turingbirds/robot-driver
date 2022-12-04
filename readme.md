@@ -1,7 +1,7 @@
 Robot driver
 ============
 
-Wifi heavy duty servo motor controller
+Heavy duty 12 V servo motor driver with Wifi link
 
 **⚠️ Status: prototype ⚠️**
 
