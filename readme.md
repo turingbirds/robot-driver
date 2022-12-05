@@ -39,6 +39,15 @@ Supply rail transient response during the demo program (as in the video):
 ![transients2](https://user-images.githubusercontent.com/1014092/205522979-7068d6bf-be71-4a43-afa0-1296b7fc97fe.jpg)
 
 
+License
+-------
+
+[Open source hardware](https://www.oshwa.org/) is hardware for which the design is made publicly available, so that anyone can study, modify, distribute, make, and sell the design or hardware based on that design, subject to the following license conditions.
+
+Hardware licensed under the *CERN Open Hardware Licence Version 2 - Weakly Reciprocal,* a copy of which is included in this repository at [cern_ohl_w_v2.txt](https://github.com/turingbirds/robot-driver/blob/master/cern_ohl_w_v2.txt).
+
+Software licensed under the *Apache License 2.0,* a copy of which is included at [apache_license_2.0.txt](https://github.com/turingbirds/robot-driver/blob/master/apache_license_2.0.txt).
+
 Credits
 -------
 
