@@ -2,7 +2,8 @@
 #define SERIAL_DEBUG 1
 
 // demo mode: no wifi and MQTT, just pulse motors one after the other
-#define DEMO_MODE 1
+// #define DEMO_MODE 1
+#define DEMO_MODE_ADC_READING
 
 // servo mode
 //#define USE_ENCODERS 1
@@ -18,23 +19,8 @@
 #include "esp_sleep.h"
 
 
-volatile uint8_t serial_delay_counter = 0;
-volatile uint32_t bat_volt_adc_raw = 0;
-
-#if DEMO_MODE
-volatile uint8_t foo = 0;
-volatile uint8_t motor_idx = 0;
-#endif
-
 // ----------------------------------------------------------------------------
-// definitions for trigger control output
-
-// const int ledPin = 33;
-
-// ----------------------------------------------------------------------------
-// definitions for servo control
-// #define DIRECTION_COUNTER_CLOCKWISE 0
-// #define DIRECTION_CLOCKWISE 1
+// definitions
 
 #define PWM_RESOLUTION 8
 #define PWM_FREQ  25000
@@ -62,11 +48,23 @@ volatile uint8_t motor_idx = 0;
 #define ENCODER_C_CLK_PIN 33
 #define ENCODER_C_DT_PIN 32
 
-#define BAT_VOLT_ADC_PIN 15
-
+#define BAT_VOLT_ADC_PIN 36
 
 const unsigned int min_dutycycle = 30;  // allow transistor to turn fully on before turning it off on heavy loads (transistor spends too much time in linear range below this value)
-const unsigned int max_dutycycle = 211;  // 14.4V supply for a 12V motor -> 83% max duty = 211/255olatile int delta_pos_L = 0;
+const unsigned int max_dutycycle = 211;  // 14.4V supply for a 12V motor -> 83% max duty = 211/255
+
+// ----------------------------------------------------------------------------
+// Global state
+
+#if DEMO_MODE
+volatile uint8_t foo = 0;
+volatile uint8_t motor_idx = 0;
+#endif
+
+volatile uint8_t serial_delay_counter = 0;
+volatile uint32_t bat_volt_adc_raw = 0;
+
+volatile int delta_pos_L = 0;
 volatile int delta_pos_R = 0;
 volatile int delta_pos_C = 0;
 
@@ -75,14 +73,20 @@ hw_timer_t * timer = NULL;
 // ----------------------------------------------------------------------------
 // wifi connection and MQTT server
 
-const char* ssid = "v2vr";
-const char* password = "1098217356521888";
+const char* ssid = "Qeske Open";
+const char* password = "OpenWifi*";
+const char* mqtt_server = "10.15.2.42";//"192.168.1.11";
 
-const char* hostname = "v2vr_esp32_client2";
-// N.B. change also MQTT prefix, e.g. "vr2/" or "vr2/" !!!
 
-const char* mqtt_server = "192.168.1.11";
+// ----------------------------------------------------------------------------
+// our own IDs
 
+const char* hostname = "v2vr_esp32_client";
+// N.B. change also MQTT prefix, e.g. "vr/" or "vr2/" !!!
+
+#define MQTT_PREFIX "vr/"
+
+// ----------------------------------------------------------------------------
 #if !DEMO_MODE
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -181,13 +185,13 @@ void callback(char* topic, byte* message, unsigned int length) {
      s[i] = message[i];
    }
    s[length] = '\0';
-  if (String(topic) == "vr2/right_controller_delta") {
+  if (String(topic) == MQTT_PREFIX "right_controller_delta") {
     delta_pos_R = atoi(s);
   }
-  else if (String(topic) == "vr2/left_controller_delta") {
+  else if (String(topic) == MQTT_PREFIX "left_controller_delta") {
     delta_pos_L = atoi(s);
   }
-  else if (String(topic) == "vr2/head_mounted_position_delta") {
+  else if (String(topic) == MQTT_PREFIX "head_mounted_position_delta") {
     delta_pos_C = atoi(s);
   }
 }
@@ -218,6 +222,9 @@ void setup() {
   Serial.begin(115200);
   Serial.println("In setup(): ");
 
+  adcAttachPin(BAT_VOLT_ADC_PIN);
+  analogSetPinAttenuation(BAT_VOLT_ADC_PIN, ADC_2_5db);    // The input voltage of ADC will be attenuated, extending the range of measurement to up to approx. 1100 mV. (1V input = ADC reading of 3722)
+
 #ifndef DEMO_MODE
   setup_wifi();
 
@@ -242,6 +249,16 @@ void loop() {
     if (motor_idx >= 12) {
       motor_idx = 0;
     }
+
+#ifdef DEMO_MODE_ADC_READING
+    bat_volt_adc_raw = analogRead(BAT_VOLT_ADC_PIN);
+    const float bat_volt_adc = bat_volt_adc_raw * 0.0067;
+    const float bat_volt_adc_corrected = bat_volt_adc + (20. - bat_volt_adc) / 20.; // some ad-hoc correction of the horrible ADC nonlinearity
+
+    Serial.print(bat_volt_adc_raw);
+    Serial.println();
+    Serial.printf("%f\n", bat_volt_adc_corrected);
+#endif
   }
 
   // one motor after the other
@@ -334,18 +351,17 @@ void loop() {
     ledcWrite(MOTOR_C_PWM_CHANNEL_B, 0);
   }
   delay(10);
+
 #else
 
-
-
+  // attempt to connect to MQTT broker
   if (!client.connected()) {
     Serial.print("Attempting MQTT connection...");\
-    // Attempt to connect
     if (client.connect(hostname)) {
       Serial.println("connected");
-      client.subscribe("vr2/left_controller_delta");
-      client.subscribe("vr2/right_controller_delta");
-      client.subscribe("vr2/head_mounted_position_delta");
+      client.subscribe(MQTT_PREFIX "left_controller_delta");
+      client.subscribe(MQTT_PREFIX "right_controller_delta");
+      client.subscribe(MQTT_PREFIX "head_mounted_position_delta");
     }
     else {
       Serial.print("failed, rc=");
@@ -356,16 +372,32 @@ void loop() {
     }
   }
   client.loop();
-  //
-//  Serial.print("delta_pos_R = ");
+
+  // ----------------------------------------------------------------------------
+  // report on battery voltage
+
+  bat_volt_adc_raw = analogRead(BAT_VOLT_ADC_PIN);
+  const float bat_volt_adc = bat_volt_adc_raw * 0.0067;
+  const float bat_volt_adc_corrected = bat_volt_adc + (20. - bat_volt_adc) / 20.; // some ad-hoc correction of the horrible ADC nonlinearity
+
+  // Serial.print(bat_volt_adc_raw);
+  // Serial.println();
+  // Serial.printf("%f\n", bat_volt_adc_corrected);
+
+  char bat_volt_adc_corrected_str[80];
+  sprintf(bat_volt_adc_corrected_str, "%f", bat_volt_adc_corrected);
+  client.publish(MQTT_PREFIX "battery_voltage", bat_volt_adc_corrected_str, true);
+
+  // ----------------------------------------------------------------------------
+  // set motors
+
+  // Serial.print("delta_pos_R = ");
   // Serial.print(delta_pos_R);
   // Serial.print(". delta_pos_L = ");
   // Serial.print(delta_pos_L);
   // Serial.print(", delta_pos_C = ");
   // Serial.print(delta_pos_C);
-  //   Serial.println();
-
-  bat_volt_adc_raw = analogRead(BAT_VOLT_ADC_PIN);
+  // Serial.println();
 
   if (delta_pos_L > 0) {
     ledcWrite(MOTOR_L_PWM_CHANNEL_A, 0);
