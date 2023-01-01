@@ -28,6 +28,8 @@ Tech
 
 PCB fits the case of a Makita battery charger.
 
+Bill of materials: [CSV](bom.csv)
+
 
 Benchmarking
 ------------
