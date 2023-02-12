@@ -1,12 +1,24 @@
+/*
+
+Robot controller
+----------------
+
+https://github.com/turingbirds/robot-driver
+
+Copyright 2023
+Apache License 2.0
+
+*/
+
 // warning!! Enabling serial debug will increase response latency
-#define SERIAL_DEBUG 1
+#define SERIAL_DEBUG 0
 
 // demo mode: no wifi and MQTT, just pulse motors one after the other
-// #define DEMO_MODE 1
-#define DEMO_MODE_ADC_READING
+#define DEMO_MODE 0
+#define DEMO_MODE_ADC_READING 0
 
 // servo mode
-//#define USE_ENCODERS 1
+#define USE_ENCODERS 0
 
 #include <stdint.h>
 
@@ -64,9 +76,9 @@ volatile uint8_t motor_idx = 0;
 volatile uint8_t serial_delay_counter = 0;
 volatile uint32_t bat_volt_adc_raw = 0;
 
-volatile int delta_pos_L = 0;
-volatile int delta_pos_R = 0;
-volatile int delta_pos_C = 0;
+volatile int vel_L = 0;
+volatile int vel_R = 0;
+volatile int vel_C = 0;
 
 hw_timer_t * timer = NULL;
 
@@ -75,14 +87,13 @@ hw_timer_t * timer = NULL;
 
 const char* ssid = "Qeske Open";
 const char* password = "OpenWifi*";
-const char* mqtt_server = "10.15.2.42";//"192.168.1.11";
+const char* mqtt_server = "10.15.2.73";
 
 
 // ----------------------------------------------------------------------------
 // our own IDs
 
 const char* hostname = "v2vr_esp32_client";
-// N.B. change also MQTT prefix, e.g. "vr/" or "vr2/" !!!
 
 #define MQTT_PREFIX "vr/"
 
@@ -99,7 +110,7 @@ int value = 0;
 // ----------------------------------------------------------------------------
 // timer interrupt handler to read out encoder
 
-#ifdef USE_ENCODERS
+#if USE_ENCODERS
 
 void IRAM_ATTR onTimer() {
   uint8_t CLK_L_current_state = digitalRead(ENCODER_L_CLK_PIN);
@@ -185,14 +196,14 @@ void callback(char* topic, byte* message, unsigned int length) {
      s[i] = message[i];
    }
    s[length] = '\0';
-  if (String(topic) == MQTT_PREFIX "right_controller_delta") {
-    delta_pos_R = atoi(s);
+  if (String(topic) == MQTT_PREFIX "vel_R") {
+    vel_R = atoi(s);
   }
-  else if (String(topic) == MQTT_PREFIX "left_controller_delta") {
-    delta_pos_L = atoi(s);
+  else if (String(topic) == MQTT_PREFIX "vel_L") {
+    vel_L = atoi(s);
   }
-  else if (String(topic) == MQTT_PREFIX "head_mounted_position_delta") {
-    delta_pos_C = atoi(s);
+  else if (String(topic) == MQTT_PREFIX "vel_C") {
+    vel_C = atoi(s);
   }
 }
 #endif
@@ -241,7 +252,7 @@ void setup() {
 
 
 void loop() {
-#ifdef DEMO_MODE
+#if DEMO_MODE
   ++foo;
   if (foo > max_dutycycle) {
     foo = min_dutycycle;
@@ -250,7 +261,7 @@ void loop() {
       motor_idx = 0;
     }
 
-#ifdef DEMO_MODE_ADC_READING
+#if DEMO_MODE_ADC_READING
     bat_volt_adc_raw = analogRead(BAT_VOLT_ADC_PIN);
     const float bat_volt_adc = bat_volt_adc_raw * 0.0067;
     const float bat_volt_adc_corrected = bat_volt_adc + (20. - bat_volt_adc) / 20.; // some ad-hoc correction of the horrible ADC nonlinearity
@@ -359,9 +370,9 @@ void loop() {
     Serial.print("Attempting MQTT connection...");\
     if (client.connect(hostname)) {
       Serial.println("connected");
-      client.subscribe(MQTT_PREFIX "left_controller_delta");
-      client.subscribe(MQTT_PREFIX "right_controller_delta");
-      client.subscribe(MQTT_PREFIX "head_mounted_position_delta");
+      client.subscribe(MQTT_PREFIX "vel_L");
+      client.subscribe(MQTT_PREFIX "vel_R");
+      client.subscribe(MQTT_PREFIX "vel_C");
     }
     else {
       Serial.print("failed, rc=");
@@ -391,20 +402,22 @@ void loop() {
   // ----------------------------------------------------------------------------
   // set motors
 
-  // Serial.print("delta_pos_R = ");
-  // Serial.print(delta_pos_R);
-  // Serial.print(". delta_pos_L = ");
-  // Serial.print(delta_pos_L);
-  // Serial.print(", delta_pos_C = ");
-  // Serial.print(delta_pos_C);
-  // Serial.println();
-
-  if (delta_pos_L > 0) {
+#if SERIAL_DEBUG
+//   Serial.print("vel_R = ");
+//   Serial.print(vel_R);
+//   Serial.print(". vel_L = ");
+//   Serial.print(vel_L);
+//   Serial.print(", vel_C = ");
+//   Serial.print(vel_C);
+//   Serial.println();
+#endif
+  
+  if (vel_L > 0) {
     ledcWrite(MOTOR_L_PWM_CHANNEL_A, 0);
-    ledcWrite(MOTOR_L_PWM_CHANNEL_B, delta_pos_L);
+    ledcWrite(MOTOR_L_PWM_CHANNEL_B, vel_L);
   }
-  else if (delta_pos_L < 0) {
-    ledcWrite(MOTOR_L_PWM_CHANNEL_A, -delta_pos_L);
+  else if (vel_L < 0) {
+    ledcWrite(MOTOR_L_PWM_CHANNEL_A, -vel_L);
     ledcWrite(MOTOR_L_PWM_CHANNEL_B, 0);
   }
   else {
@@ -412,12 +425,12 @@ void loop() {
     ledcWrite(MOTOR_L_PWM_CHANNEL_B, 0);
   }
 
-  if (delta_pos_R > 0) {
+  if (vel_R > 0) {
     ledcWrite(MOTOR_R_PWM_CHANNEL_A, 0);
-    ledcWrite(MOTOR_R_PWM_CHANNEL_B, delta_pos_R);
+    ledcWrite(MOTOR_R_PWM_CHANNEL_B, vel_R);
   }
-  else if (delta_pos_R < 0) {
-    ledcWrite(MOTOR_R_PWM_CHANNEL_A, -delta_pos_R);
+  else if (vel_R < 0) {
+    ledcWrite(MOTOR_R_PWM_CHANNEL_A, -vel_R);
     ledcWrite(MOTOR_R_PWM_CHANNEL_B, 0);
   }
   else {
@@ -425,12 +438,12 @@ void loop() {
     ledcWrite(MOTOR_R_PWM_CHANNEL_B, 0);
   }
 
-  if (delta_pos_C > 0) {
+  if (vel_C > 0) {
     ledcWrite(MOTOR_C_PWM_CHANNEL_A, 0);
-    ledcWrite(MOTOR_C_PWM_CHANNEL_B, delta_pos_C);
+    ledcWrite(MOTOR_C_PWM_CHANNEL_B, vel_C);
   }
-  else if (delta_pos_C < 0) {
-    ledcWrite(MOTOR_C_PWM_CHANNEL_A, -delta_pos_C);
+  else if (vel_C < 0) {
+    ledcWrite(MOTOR_C_PWM_CHANNEL_A, -vel_C);
     ledcWrite(MOTOR_C_PWM_CHANNEL_B, 0);
   }
   else {
