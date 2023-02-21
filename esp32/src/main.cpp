@@ -17,8 +17,12 @@ Apache License 2.0
 #define DEMO_MODE 0
 #define DEMO_MODE_ADC_READING 0
 
-// servo mode
+// use feedback encoders/servo mode for main motors
 #define USE_ENCODERS 0
+
+// control small "normal" PWM servo motors (pins shared with encoder inputs--select only one at a time)
+#define AUX_SERVO_CONTROLLER 1
+
 
 #include <stdint.h>
 
@@ -30,6 +34,9 @@ Apache License 2.0
 #include "esp_system.h"
 #include "esp_sleep.h"
 
+#if AUX_SERVO_CONTROLLER
+#include <ESP32Servo.h>
+#endif
 
 // ----------------------------------------------------------------------------
 // definitions
@@ -60,6 +67,15 @@ Apache License 2.0
 #define ENCODER_C_CLK_PIN 33
 #define ENCODER_C_DT_PIN 32
 
+#if AUX_SERVO_CONTROLLER
+#define N_AUX_SERVOS 2
+
+#define AUX_SERVO_1_PIN 21
+#define AUX_SERVO_2_PIN 34
+
+const size_t AUX_SERVO_PIN[N_AUX_SERVOS] = {AUX_SERVO_1_PIN, AUX_SERVO_2_PIN};
+#endif
+
 #define BAT_VOLT_ADC_PIN 36
 
 const unsigned int min_dutycycle = 30;  // allow transistor to turn fully on before turning it off on heavy loads (transistor spends too much time in linear range below this value)
@@ -79,6 +95,13 @@ volatile uint32_t bat_volt_adc_raw = 0;
 volatile int vel_L = 0;
 volatile int vel_R = 0;
 volatile int vel_C = 0;
+
+#if AUX_SERVO_CONTROLLER
+Servo aux_servo[N_AUX_SERVOS];
+
+// initial servo positions
+volatile unsigned int aux_servo_pos[N_AUX_SERVOS] = {90, 90};
+#endif
 
 hw_timer_t * timer = NULL;
 
@@ -205,6 +228,14 @@ void callback(char* topic, byte* message, unsigned int length) {
   else if (String(topic) == MQTT_PREFIX "vel_C") {
     vel_C = atoi(s);
   }
+#if AUX_SERVO_CONTROLLER
+  else if (String(topic) == MQTT_PREFIX "aux_pos_1") {
+    aux_servo_pos[0] = atoi(s);
+  }
+  else if (String(topic) == MQTT_PREFIX "aux_pos_2") {
+    aux_servo_pos[1] = atoi(s);
+  }
+#endif
 }
 #endif
 // ----------------------------------------------------------------------------
@@ -236,7 +267,7 @@ void setup() {
   adcAttachPin(BAT_VOLT_ADC_PIN);
   analogSetPinAttenuation(BAT_VOLT_ADC_PIN, ADC_2_5db);    // The input voltage of ADC will be attenuated, extending the range of measurement to up to approx. 1100 mV. (1V input = ADC reading of 3722)
 
-#ifndef DEMO_MODE
+#if !DEMO_MODE
   setup_wifi();
 
   Serial.println("client.setServer");
@@ -248,6 +279,14 @@ void setup() {
 #endif
 
   init_servos();
+
+#ifdef AUX_SERVO_CONTROLLER
+  for (size_t i = 0; i < N_AUX_SERVOS; ++i) {
+    ESP32PWM::allocateTimer(i);
+    aux_servo[i].setPeriodHertz(50); // [Hz]
+    aux_servo[i].attach(AUX_SERVO_PIN[i], 500, 2400);
+  }
+#endif
 }
 
 
@@ -373,6 +412,10 @@ void loop() {
       client.subscribe(MQTT_PREFIX "vel_L");
       client.subscribe(MQTT_PREFIX "vel_R");
       client.subscribe(MQTT_PREFIX "vel_C");
+#ifdef AUX_SERVO_CONTROLLER
+      client.subscribe(MQTT_PREFIX "aux_pos_1");
+      client.subscribe(MQTT_PREFIX "aux_pos_2");
+#endif
     }
     else {
       Serial.print("failed, rc=");
@@ -384,16 +427,20 @@ void loop() {
   }
   client.loop();
 
+#ifdef AUX_SERVO_CONTROLLER
+  // aux servo controller
+  // ----------------------------------------------------------------------------
+  for (size_t i = 0; i < N_AUX_SERVOS; ++i) {
+    aux_servo[i].write(aux_servo_pos[i]);
+  }
+#endif
+
   // ----------------------------------------------------------------------------
   // report on battery voltage
 
   bat_volt_adc_raw = analogRead(BAT_VOLT_ADC_PIN);
   const float bat_volt_adc = bat_volt_adc_raw * 0.0067;
   const float bat_volt_adc_corrected = bat_volt_adc + (20. - bat_volt_adc) / 20.; // some ad-hoc correction of the horrible ADC nonlinearity
-
-  // Serial.print(bat_volt_adc_raw);
-  // Serial.println();
-  // Serial.printf("%f\n", bat_volt_adc_corrected);
 
   char bat_volt_adc_corrected_str[80];
   sprintf(bat_volt_adc_corrected_str, "%f", bat_volt_adc_corrected);
@@ -402,16 +449,6 @@ void loop() {
   // ----------------------------------------------------------------------------
   // set motors
 
-#if SERIAL_DEBUG
-//   Serial.print("vel_R = ");
-//   Serial.print(vel_R);
-//   Serial.print(". vel_L = ");
-//   Serial.print(vel_L);
-//   Serial.print(", vel_C = ");
-//   Serial.print(vel_C);
-//   Serial.println();
-#endif
-  
   if (vel_L > 0) {
     ledcWrite(MOTOR_L_PWM_CHANNEL_A, 0);
     ledcWrite(MOTOR_L_PWM_CHANNEL_B, vel_L);
@@ -450,5 +487,20 @@ void loop() {
     ledcWrite(MOTOR_C_PWM_CHANNEL_A, 0);
     ledcWrite(MOTOR_C_PWM_CHANNEL_B, 0);
   }
+
+#if SERIAL_DEBUG
+  // enabling this renders everything very, very slow
+  // Serial.print("vel_R = ");
+  // Serial.print(vel_R);
+  // Serial.print(". vel_L = ");
+  // Serial.print(vel_L);
+  // Serial.print(", vel_C = ");
+  // Serial.print(vel_C);
+  // Serial.println();
+  // Serial.print(bat_volt_adc_raw);
+  // Serial.println();
+  // Serial.printf("%f\n", bat_volt_adc_corrected);
+#endif
+
 #endif
 }

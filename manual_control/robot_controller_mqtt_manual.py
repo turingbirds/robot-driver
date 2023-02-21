@@ -51,10 +51,14 @@ orange=(255, 100, 0)
 
 # global state variables
 vel: List[int] = 3 * [0]
-enable = 3 * [False]
+enable: List[bool] = 3 * [False]
+servo_ang: List[int] = 2 * [90]
 
 # velocity increment
 delta_vel = 1
+
+# servo angle increment
+delta_ang = 1
 
 # start main loop
 clock = pygame.time.Clock()
@@ -96,10 +100,28 @@ while True:
   else:
       enable[2] = False
 
+  if keys[pygame.K_UP]:
+      servo_ang[0] += delta_ang
+  if keys[pygame.K_DOWN]:
+      servo_ang[0] -= delta_ang
+  if keys[pygame.K_LEFT]:
+      servo_ang[1] += delta_ang
+  if keys[pygame.K_RIGHT]:
+      servo_ang[1] -= delta_ang
+  for i in range(2):
+      servo_ang[i] = max(servo_ang[i], 0)
+      servo_ang[i] = min(servo_ang[i], 180)
+
   for i in range(3):
     text = font.render('Motor ' + str(i) + ': ' + str(vel[i]), True, green, blue)
     textRect = text.get_rect()
     textRect.center = (screen_w // 2, screen_h // 2 + 60 * i)
+    sc.blit(text, textRect)
+
+  for i in range(2):
+    text = font.render('Servo ' + str(i) + ': ' + str(servo_ang[i]), True, green, blue)
+    textRect = text.get_rect()
+    textRect.center = (screen_w // 2, screen_h // 2 + 60 * (3 + i))
     sc.blit(text, textRect)
 
   topic = "vr/vel_L"
@@ -118,6 +140,14 @@ while True:
   value = 0
   if enable[2]:
     value = vel[2]
+  client.publish(topic, payload=value, qos=0, retain=False)
+
+  topic = "vr/aux_pos_1"
+  value = servo_ang[0]
+  client.publish(topic, payload=value, qos=0, retain=False)
+
+  topic = "vr/aux_pos_2"
+  value = servo_ang[1]
   client.publish(topic, payload=value, qos=0, retain=False)
 
   pygame.display.flip()
