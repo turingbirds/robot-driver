@@ -15830,8 +15830,8 @@ Source: http://www.infineon.com .. tle5205-2.pdf</description>
 <wire x1="10.16" y1="-8.255" x2="10.16" y2="4.445" width="0.1524" layer="21"/>
 <circle x="-4.365" y="-1.731" radius="3.429" width="0.1524" layer="21"/>
 <circle x="4.3726" y="-1.731" radius="3.429" width="0.1524" layer="21"/>
-<pad name="1" x="-5.08" y="1.905" drill="1.6002" shape="long" rot="R90"/>
-<pad name="2" x="5.08" y="1.905" drill="1.6002" shape="long" rot="R90"/>
+<pad name="1" x="-5.08" y="1.905" drill="2" shape="long" rot="R90"/>
+<pad name="2" x="5.08" y="1.905" drill="2" shape="long" rot="R90"/>
 <text x="-10.08" y="10.715" size="1.778" layer="25" ratio="10">&gt;NAME</text>
 <text x="-10.08" y="-12.78" size="1.778" layer="27" ratio="10">&gt;VALUE</text>
 <wire x1="10.16" y1="4.445" x2="-10.16" y2="4.445" width="0.1524" layer="21"/>
@@ -18271,10 +18271,10 @@ Source: http://www.kingtronics.com/SMD_M7/M7_SMD_4007.pdf</description>
 <packages>
 <package name="SHK20L">
 <description>&lt;b&gt;FUSE HOLDER&lt;/b&gt;&lt;p&gt; 5 x 20 mm, SH contact, SHH1 Schukat / E1073 Buerklin</description>
-<pad name="1A" x="1.5" y="0" drill="1.3208" diameter="2.54" shape="long" rot="R90"/>
-<pad name="2A" x="10" y="0" drill="1.3208" diameter="2.54" shape="long" rot="R90"/>
-<pad name="2B" x="13.5" y="0" drill="1.3208" diameter="2.54" shape="long" rot="R90"/>
-<pad name="1B" x="5" y="0" drill="1.3208" diameter="2.54" shape="long" rot="R90"/>
+<pad name="1A" x="1.5" y="0" drill="1.8" diameter="2.54" shape="long" rot="R90"/>
+<pad name="2A" x="10" y="0" drill="1.8" diameter="2.54" shape="long" rot="R90"/>
+<pad name="2B" x="13.5" y="0" drill="1.8" diameter="2.54" shape="long" rot="R90"/>
+<pad name="1B" x="5" y="0" drill="1.8" diameter="2.54" shape="long" rot="R90"/>
 <text x="-3.81" y="3.175" size="1.778" layer="25" ratio="10">&gt;NAME</text>
 <text x="-3.81" y="-5.08" size="1.778" layer="27" ratio="10">&gt;VALUE</text>
 <wire x1="0" y1="3.75" x2="15" y2="3.75" width="0.127" layer="21"/>
@@ -18551,6 +18551,10 @@ grid 2.54 mm</description>
 <part name="+3V2" library="supply1" deviceset="+3V3" device=""/>
 <part name="C45" library="rcl" deviceset="C-EU" device="C1206"/>
 <part name="GND15" library="supply1" deviceset="GND" device=""/>
+<part name="JP_A1" library="jumper" deviceset="JP1E" device=""/>
+<part name="GND31" library="supply1" deviceset="GND" device=""/>
+<part name="JP_A0" library="jumper" deviceset="JP1E" device=""/>
+<part name="GND32" library="supply1" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -18801,6 +18805,14 @@ grid 2.54 mm</description>
 <instance part="C45" gate="G$1" x="-10.16" y="200.66"/>
 <instance part="GND15" gate="1" x="36.83" y="171.45" smashed="yes">
 <attribute name="VALUE" x="34.925" y="169.545" size="1.27" layer="96" font="vector" ratio="18"/>
+</instance>
+<instance part="JP_A1" gate="A" x="41.91" y="88.9" rot="R180"/>
+<instance part="GND31" gate="1" x="41.91" y="93.98" smashed="yes" rot="R180">
+<attribute name="VALUE" x="43.815" y="95.885" size="1.27" layer="96" font="vector" ratio="18" rot="R180"/>
+</instance>
+<instance part="JP_A0" gate="A" x="41.91" y="76.2" rot="R180"/>
+<instance part="GND32" gate="1" x="41.91" y="81.28" smashed="yes" rot="R180">
+<attribute name="VALUE" x="43.815" y="83.185" size="1.27" layer="96" font="vector" ratio="18" rot="R180"/>
 </instance>
 </instances>
 <busses>
@@ -19072,6 +19084,14 @@ grid 2.54 mm</description>
 <pinref part="C42" gate="G$1" pin="2"/>
 <wire x1="-36.83" y1="143.51" x2="-36.83" y2="144.78" width="0.1524" layer="91"/>
 <junction x="-43.18" y="143.51"/>
+</segment>
+<segment>
+<pinref part="JP_A1" gate="A" pin="1"/>
+<pinref part="GND31" gate="1" pin="GND"/>
+</segment>
+<segment>
+<pinref part="JP_A0" gate="A" pin="1"/>
+<pinref part="GND32" gate="1" pin="GND"/>
 </segment>
 </net>
 <net name="+5V" class="0">
@@ -19768,6 +19788,20 @@ grid 2.54 mm</description>
 <wire x1="-27.94" y1="153.67" x2="-27.94" y2="111.76" width="0.1524" layer="91"/>
 <wire x1="-27.94" y1="111.76" x2="-13.97" y2="111.76" width="0.1524" layer="91"/>
 <wire x1="-36.83" y1="153.67" x2="-27.94" y2="153.67" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$8" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="D25"/>
+<wire x1="16.51" y1="91.44" x2="39.37" y2="91.44" width="0.1524" layer="91"/>
+<pinref part="JP_A1" gate="A" pin="2"/>
+</segment>
+</net>
+<net name="N$29" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="D35"/>
+<pinref part="JP_A0" gate="A" pin="2"/>
+<wire x1="16.51" y1="78.74" x2="39.37" y2="78.74" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
