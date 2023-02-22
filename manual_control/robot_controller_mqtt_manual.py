@@ -58,7 +58,7 @@ servo_ang: List[int] = 2 * [90]
 delta_vel = 1
 
 # servo angle increment
-delta_ang = 1
+delta_ang = 5
 
 # start main loop
 clock = pygame.time.Clock()
