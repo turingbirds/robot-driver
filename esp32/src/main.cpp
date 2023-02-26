@@ -23,6 +23,9 @@ Apache License 2.0
 // control small "normal" PWM servo motors (pins shared with encoder inputs--select only one at a time)
 #define AUX_SERVO_CONTROLLER 1
 
+#define MIN(x, y) ((x)<(y)?(x):(y))
+#define MAX(x, y) ((x)>(y)?(x):(y))
+
 
 #include <stdint.h>
 
@@ -53,25 +56,27 @@ Apache License 2.0
 
 #define PWM_EN_PIN 2
 
-#define MOTOR_L_PWM_CHANNEL_A 0
-#define MOTOR_L_PWM_CHANNEL_B 1
+#define MOTOR_L_PWM_CHANNEL_A 6
+#define MOTOR_L_PWM_CHANNEL_B 7
 #define MOTOR_R_PWM_CHANNEL_A 2
 #define MOTOR_R_PWM_CHANNEL_B 3
 #define MOTOR_C_PWM_CHANNEL_A 4
 #define MOTOR_C_PWM_CHANNEL_B 5
 
+#ifdef USE_ENCODERS
 #define ENCODER_L_CLK_PIN 27
 #define ENCODER_L_DT_PIN 26
 #define ENCODER_R_CLK_PIN 34
 #define ENCODER_R_DT_PIN 21
 #define ENCODER_C_CLK_PIN 33
 #define ENCODER_C_DT_PIN 32
+#endif
 
 #if AUX_SERVO_CONTROLLER
 #define N_AUX_SERVOS 2
 
 #define AUX_SERVO_1_PIN 21
-#define AUX_SERVO_2_PIN 34
+#define AUX_SERVO_2_PIN 33
 
 const size_t AUX_SERVO_PIN[N_AUX_SERVOS] = {AUX_SERVO_1_PIN, AUX_SERVO_2_PIN};
 #endif
@@ -231,6 +236,8 @@ void callback(char* topic, byte* message, unsigned int length) {
 #if AUX_SERVO_CONTROLLER
   else if (String(topic) == MQTT_PREFIX "aux_pos_1") {
     aux_servo_pos[0] = atoi(s);
+    aux_servo_pos[0] = MIN(140, aux_servo_pos[0]);
+    aux_servo_pos[0] = MAX(60, aux_servo_pos[0]);
   }
   else if (String(topic) == MQTT_PREFIX "aux_pos_2") {
     aux_servo_pos[1] = atoi(s);
@@ -421,6 +428,14 @@ void loop() {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println();
+      Serial.print("Attempting Wifi connection...");\
+      WiFi.reconnect();
+      delay(1000);
+      while (WiFi.status() != WL_CONNECTED) {
+        Serial.print("Attempting Wifi connection...");\
+        WiFi.reconnect();
+        delay(1000);
+      }
       delay(1000);
       return;
     }
