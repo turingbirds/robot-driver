@@ -11,7 +11,7 @@ Apache License 2.0
 */
 
 // warning!! Enabling serial debug will increase response latency
-#define SERIAL_DEBUG 0
+#define SERIAL_DEBUG 1
 
 // demo mode: no wifi and MQTT, just pulse motors one after the other
 #define DEMO_MODE 0
@@ -113,9 +113,12 @@ hw_timer_t * timer = NULL;
 // ----------------------------------------------------------------------------
 // wifi connection and MQTT server
 
-const char* ssid = "Qeske Open";
-const char* password = "OpenWifi*";
-const char* mqtt_server = "10.15.2.73";
+const char* ssid = "v2vr";
+const char* password = "1098217356521888";
+const char* mqtt_server = "192.168.1.11";
+// const char* ssid = "Qeske Open";
+// const char* password = "OpenWifi*";
+// const char* mqtt_server = "10.15.2.73";
 
 
 // ----------------------------------------------------------------------------
@@ -215,8 +218,8 @@ void setup_wifi() {
 
 void callback(char* topic, byte* message, unsigned int length) {
 #if SERIAL_DEBUG
-  // Serial.print("Message arrived on topic: ");
-  // Serial.print(topic);
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
   // Serial.print(". Message: ");
 #endif
    char s[length+1];
