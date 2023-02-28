@@ -32,7 +32,7 @@ import pygame
 import time
 import sys
 
-mqtt_host = "10.15.2.73"
+mqtt_host = "192.168.1.11"#10.15.2.73"
 
 client = mqtt.Client(client_id="robot_controller_manual", clean_session=True, userdata=None, protocol= mqtt.MQTTv311, transport="tcp")
 client.connect(mqtt_host, port=1883, keepalive=60, bind_address="")
@@ -49,10 +49,11 @@ yellow=(255, 255, 0)
 green=(0, 255, 255)
 orange=(255, 100, 0)
 
+mqtt_prefix: str = "vr/"
+
 # global state variables
-vel: List[int] = 3 * [0]
-enable: List[bool] = 3 * [False]
-servo_ang: List[int] = 2 * [90]
+state = {"vel_L": 0., "vel_C": 0., "vel_R": 0., "aux_pos_1": 90, "aux_pos_2": 90}
+enable = {"vel_L": False, "vel_C": False, "vel_R": False}
 
 # velocity increment
 delta_vel = 1
@@ -61,6 +62,9 @@ delta_vel = 1
 delta_ang = 5
 
 # start main loop
+prev_state = state.copy()
+for k in state.keys():
+  prev_state[k] = float("inf")
 clock = pygame.time.Clock()
 
 while True:
@@ -74,80 +78,66 @@ while True:
       sys.exit(0)
 
   if keys[pygame.K_q]:
-      vel[0] += delta_vel
+      state["vel_L"] += delta_vel
   if keys[pygame.K_a]:
-      vel[0] -= delta_vel
+      state["vel_L"] -= delta_vel
   if keys[pygame.K_z]:
-      enable[0] = True
+      enable["vel_L"] = True
   else:
-      enable[0] = False
+      enable["vel_L"] = False
 
   if keys[pygame.K_w]:
-      vel[1] += delta_vel
+      state["vel_C"] += delta_vel
   if keys[pygame.K_s]:
-      vel[1] -= delta_vel
+      state["vel_C"] -= delta_vel
   if keys[pygame.K_x]:
-      enable[1] = True
+      enable["vel_C"] = True
   else:
-      enable[1] = False
+      enable["vel_C"] = False
 
   if keys[pygame.K_e]:
-      vel[2] += delta_vel
+      state["vel_R"] += delta_vel
   if keys[pygame.K_d]:
-      vel[2] -= delta_vel
+      state["vel_R"] -= delta_vel
   if keys[pygame.K_c]:
-      enable[2] = True
+      enable["vel_R"] = True
   else:
-      enable[2] = False
+      enable["vel_R"] = False
 
   if keys[pygame.K_UP]:
-      servo_ang[0] += delta_ang
+      state["aux_pos_2"] += delta_ang
   if keys[pygame.K_DOWN]:
-      servo_ang[0] -= delta_ang
+      state["aux_pos_2"] -= delta_ang
   if keys[pygame.K_LEFT]:
-      servo_ang[1] += delta_ang
+      state["aux_pos_1"] += delta_ang
   if keys[pygame.K_RIGHT]:
-      servo_ang[1] -= delta_ang
-  for i in range(2):
-      servo_ang[i] = max(servo_ang[i], 0)
-      servo_ang[i] = min(servo_ang[i], 180)
+      state["aux_pos_1"] -= delta_ang
 
-  for i in range(3):
-    text = font.render('Motor ' + str(i) + ': ' + str(vel[i]), True, green, blue)
+  for topic in ["aux_pos_1", "aux_pos_2"]:
+      state[topic] = max(state[topic], 0)
+      state[topic] = min(state[topic], 180)
+
+  for i, topic in enumerate(["vel_L", "vel_C", "vel_R"]):
+    text = font.render('Motor ' + topic + ': ' + str(state[topic]), True, green, blue)
     textRect = text.get_rect()
     textRect.center = (screen_w // 2, screen_h // 2 + 60 * i)
     sc.blit(text, textRect)
 
-  for i in range(2):
-    text = font.render('Servo ' + str(i) + ': ' + str(servo_ang[i]), True, green, blue)
+  for i, topic in enumerate(["aux_pos_1", "aux_pos_2"]):
+    text = font.render('Servo ' + topic + ': ' + str(state[topic]), True, green, blue)
     textRect = text.get_rect()
     textRect.center = (screen_w // 2, screen_h // 2 + 60 * (3 + i))
     sc.blit(text, textRect)
 
-  topic = "vr/vel_L"
-  value = 0
-  if enable[0]:
-    value = vel[0]
-  client.publish(topic, payload=value, qos=0, retain=False)
+  for topic in ["vel_L", "vel_C", "vel_R", "aux_pos_1", "aux_pos_2"]:
+    value = 0
+    if topic.startswith("vel") and enable[topic]:
+      value = state[topic]
+    if topic.startswith("aux_pos"):
+      value = state[topic]
 
-  topic = "vr/vel_C"
-  value = 0
-  if enable[1]:
-    value = vel[1]
-  client.publish(topic, payload=value, qos=0, retain=False)
-
-  topic = "vr/vel_R"
-  value = 0
-  if enable[2]:
-    value = vel[2]
-  client.publish(topic, payload=value, qos=0, retain=False)
-
-  topic = "vr/aux_pos_1"
-  value = servo_ang[0]
-  client.publish(topic, payload=value, qos=0, retain=False)
-
-  topic = "vr/aux_pos_2"
-  value = servo_ang[1]
-  client.publish(topic, payload=value, qos=0, retain=False)
+    if value != prev_state[topic]:
+      prev_state[topic] = value
+      client.publish(mqtt_prefix + topic, payload=value, qos=0, retain=False)
 
   pygame.display.flip()

@@ -11,7 +11,7 @@ Apache License 2.0
 */
 
 // warning!! Enabling serial debug will increase response latency
-#define SERIAL_DEBUG 1
+#define SERIAL_DEBUG 0
 
 // demo mode: no wifi and MQTT, just pulse motors one after the other
 #define DEMO_MODE 0
@@ -63,7 +63,7 @@ Apache License 2.0
 #define MOTOR_C_PWM_CHANNEL_A 4
 #define MOTOR_C_PWM_CHANNEL_B 5
 
-#ifdef USE_ENCODERS
+#if USE_ENCODERS
 #define ENCODER_L_CLK_PIN 27
 #define ENCODER_L_DT_PIN 26
 #define ENCODER_R_CLK_PIN 34
@@ -73,12 +73,14 @@ Apache License 2.0
 #endif
 
 #if AUX_SERVO_CONTROLLER
-#define N_AUX_SERVOS 2
+#define AUX_SERVO_PWM_FREQ     50
+#define AUX_SERVO_PWM_RESOLUTION  8
 
 #define AUX_SERVO_1_PIN 21
 #define AUX_SERVO_2_PIN 33
 
-const size_t AUX_SERVO_PIN[N_AUX_SERVOS] = {AUX_SERVO_1_PIN, AUX_SERVO_2_PIN};
+#define AUX_SERVO_PWM_CHANNEL_1 0
+#define AUX_SERVO_PWM_CHANNEL_2 1
 #endif
 
 #define BAT_VOLT_ADC_PIN 36
@@ -102,10 +104,12 @@ volatile int vel_R = 0;
 volatile int vel_C = 0;
 
 #if AUX_SERVO_CONTROLLER
-Servo aux_servo[N_AUX_SERVOS];
-
 // initial servo positions
-volatile unsigned int aux_servo_pos[N_AUX_SERVOS] = {90, 90};
+volatile unsigned int aux_servo_pos_1 = 90;
+volatile unsigned int aux_servo_pos_2 = 90;
+
+Servo aux_servo_1;
+Servo aux_servo_2;
 #endif
 
 hw_timer_t * timer = NULL;
@@ -126,6 +130,7 @@ const char* mqtt_server = "192.168.1.11";
 
 const char* hostname = "v2vr_esp32_client";
 
+// !! if the MQTT_PREFIX changes, change the optimized conditionals in the callback function too!!
 #define MQTT_PREFIX "vr/"
 
 // ----------------------------------------------------------------------------
@@ -217,33 +222,50 @@ void setup_wifi() {
 }
 
 void callback(char* topic, byte* message, unsigned int length) {
-#if SERIAL_DEBUG
-  Serial.print("Message arrived on topic: ");
-  Serial.print(topic);
-  // Serial.print(". Message: ");
-#endif
-   char s[length+1];
-   for (unsigned int i = 0; i < length; ++i) {
-     s[i] = message[i];
-   }
-   s[length] = '\0';
-  if (String(topic) == MQTT_PREFIX "vel_R") {
+  #if SERIAL_DEBUG
+    Serial.print("Message arrived on topic: ");
+    Serial.println(topic);
+  #endif
+
+  // const String topic_str = String(topic); // optimized away (see conditionals below)
+  char s[length+1];
+  for (unsigned int i = 0; i < length; ++i) {
+    s[i] = message[i];
+  }
+  s[length] = '\0';
+
+  // optimization: if the topic string is shorter than 8 characters, don't consider it at all
+  if (topic[0] == '\0' || topic[1] == '\0' || topic[2] == '\0' || topic[3] == '\0' || topic[4] == '\0' || topic[5] == '\0' || topic[6] == '\0' || topic[7] == '\0') {
+    return;
+  }
+
+  //if (topic_str == MQTT_PREFIX "vel_R") {
+  if (topic[7] == 'R') { // optimized version
     vel_R = atoi(s);
   }
-  else if (String(topic) == MQTT_PREFIX "vel_L") {
+  // else if (topic_str == MQTT_PREFIX "vel_L") {
+  else if (topic[7] == 'L') { // optimized version
     vel_L = atoi(s);
   }
-  else if (String(topic) == MQTT_PREFIX "vel_C") {
+  // else if (topic_str == MQTT_PREFIX "vel_C") {
+  else if (topic[7] == 'C') { // optimized version
     vel_C = atoi(s);
   }
 #if AUX_SERVO_CONTROLLER
-  else if (String(topic) == MQTT_PREFIX "aux_pos_1") {
-    aux_servo_pos[0] = atoi(s);
-    aux_servo_pos[0] = MIN(140, aux_servo_pos[0]);
-    aux_servo_pos[0] = MAX(60, aux_servo_pos[0]);
+  // optimization: if the topic string is shorter than 12 characters, don't consider it at all
+  if (topic[8] == '\0' || topic[9] == '\0' || topic[10] == '\0' || topic[11] == '\0') {
+    return;
   }
-  else if (String(topic) == MQTT_PREFIX "aux_pos_2") {
-    aux_servo_pos[1] = atoi(s);
+
+  // if (topic_str == MQTT_PREFIX "aux_pos_1") {
+ if (topic[11] == '1') { // optimized version
+    aux_servo_pos_1 = atoi(s);
+    aux_servo_pos_1 = MIN(140, aux_servo_pos_1);
+    aux_servo_pos_1 = MAX(60, aux_servo_pos_1);
+  }
+  // else if (topic_str == MQTT_PREFIX "aux_pos_2") {
+  else if (topic[11] == '2') { // optimized version
+    aux_servo_pos_2 = atoi(s);
   }
 #endif
 }
@@ -290,13 +312,22 @@ void setup() {
 
   init_servos();
 
-#ifdef AUX_SERVO_CONTROLLER
-  for (size_t i = 0; i < N_AUX_SERVOS; ++i) {
-    ESP32PWM::allocateTimer(i);
-    aux_servo[i].setPeriodHertz(50); // [Hz]
-    aux_servo[i].attach(AUX_SERVO_PIN[i], 500, 2400);
-  }
-#endif
+// #if AUX_SERVO_CONTROLLER
+//   ledcSetup(AUX_SERVO_PWM_CHANNEL_1, AUX_SERVO_PWM_FREQ, AUX_SERVO_PWM_RESOLUTION);
+//   ledcSetup(AUX_SERVO_PWM_CHANNEL_2, AUX_SERVO_PWM_FREQ, AUX_SERVO_PWM_RESOLUTION);
+//
+//   ledcAttachPin(AUX_SERVO_1_PIN, AUX_SERVO_PWM_CHANNEL_1);
+//   ledcAttachPin(AUX_SERVO_2_PIN, AUX_SERVO_PWM_CHANNEL_2);
+// #endif
+
+#if AUX_SERVO_CONTROLLER
+  ESP32PWM::allocateTimer(AUX_SERVO_PWM_CHANNEL_1);
+  ESP32PWM::allocateTimer(AUX_SERVO_PWM_CHANNEL_2);
+  aux_servo_1.setPeriodHertz(50); // [Hz]
+  aux_servo_2.setPeriodHertz(50); // [Hz]
+  aux_servo_1.attach(AUX_SERVO_1_PIN, 500, 2400);
+  aux_servo_2.attach(AUX_SERVO_2_PIN, 500, 2400);
+  #endif
 }
 
 
@@ -422,7 +453,7 @@ void loop() {
       client.subscribe(MQTT_PREFIX "vel_L");
       client.subscribe(MQTT_PREFIX "vel_R");
       client.subscribe(MQTT_PREFIX "vel_C");
-#ifdef AUX_SERVO_CONTROLLER
+#if AUX_SERVO_CONTROLLER
       client.subscribe(MQTT_PREFIX "aux_pos_1");
       client.subscribe(MQTT_PREFIX "aux_pos_2");
 #endif
@@ -444,14 +475,8 @@ void loop() {
     }
   }
   client.loop();
+  // delay(1);
 
-#ifdef AUX_SERVO_CONTROLLER
-  // aux servo controller
-  // ----------------------------------------------------------------------------
-  for (size_t i = 0; i < N_AUX_SERVOS; ++i) {
-    aux_servo[i].write(aux_servo_pos[i]);
-  }
-#endif
 
   // ----------------------------------------------------------------------------
   // report on battery voltage
@@ -506,19 +531,34 @@ void loop() {
     ledcWrite(MOTOR_C_PWM_CHANNEL_B, 0);
   }
 
-#if SERIAL_DEBUG
-  // enabling this renders everything very, very slow
-  // Serial.print("vel_R = ");
-  // Serial.print(vel_R);
-  // Serial.print(". vel_L = ");
-  // Serial.print(vel_L);
-  // Serial.print(", vel_C = ");
-  // Serial.print(vel_C);
-  // Serial.println();
-  // Serial.print(bat_volt_adc_raw);
-  // Serial.println();
-  // Serial.printf("%f\n", bat_volt_adc_corrected);
+// #if AUX_SERVO_CONTROLLER
+//   ledcWrite(AUX_SERVO_PWM_CHANNEL_1, aux_servo_pos_1);
+//   ledcWrite(AUX_SERVO_PWM_CHANNEL_2, aux_servo_pos_2);
+// #endif
+#ifdef AUX_SERVO_CONTROLLER
+  aux_servo_1.write(aux_servo_pos_1);
+  aux_servo_2.write(aux_servo_pos_2);
 #endif
 
+// #if SERIAL_DEBUG
+//   // enabling this renders everything very, very slow
+//   Serial.print("vel_R = ");
+//   Serial.print(vel_R);
+//   Serial.print(". vel_L = ");
+//   Serial.print(vel_L);
+//   Serial.print(", vel_C = ");
+//   Serial.print(vel_C);
+//   Serial.println();
+//   #if AUX_SERVO_CONTROLLER
+//   Serial.print("aux_servo_pos_1 = ");
+//   Serial.print(aux_servo_pos_1);
+//   Serial.print(", aux_servo_pos_2 = ");
+//   Serial.print(aux_servo_pos_2);
+//   Serial.println();
+// Serial.print(bat_volt_adc_raw);
+// Serial.println();
+// Serial.printf("%f\n", bat_volt_adc_corrected);
+//   #endif
 #endif
+
 }
