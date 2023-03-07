@@ -27,12 +27,13 @@ Apache License 2.0
 
 from typing import List
 
+import math
 import paho.mqtt.client as mqtt
 import pygame
 import time
 import sys
 
-mqtt_host = "192.168.1.11"#10.15.2.73"
+mqtt_host = "localhost"
 
 client = mqtt.Client(client_id="robot_controller_manual", clean_session=True, userdata=None, protocol= mqtt.MQTTv311, transport="tcp")
 client.connect(mqtt_host, port=1883, keepalive=60, bind_address="")
@@ -42,7 +43,8 @@ screen_h = 600
 sc = pygame.display.set_mode((800, 600))
 
 pygame.font.init()
-font = pygame.font.Font('OpenSans_Italic.ttf', 32)
+font = pygame.font.Font("OpenSans_Italic.ttf", 32)
+font_small = pygame.font.Font("OpenSans_Italic.ttf", 24)
 blue = (0, 0, 255)
 white=(255, 255, 255)
 yellow=(255, 255, 0)
@@ -52,7 +54,7 @@ orange=(255, 100, 0)
 mqtt_prefix: str = "vr/"
 
 # global state variables
-state = {"vel_L": 0., "vel_C": 0., "vel_R": 0., "aux_pos_1": 90, "aux_pos_2": 90}
+state = {"vel_L": 0., "vel_C": 0., "vel_R": 0., "aux_pos_1": 90, "aux_pos_2": 90, "frame_idx": 0, "t": 0., "exercise": False}
 enable = {"vel_L": False, "vel_C": False, "vel_R": False}
 
 # velocity increment
@@ -60,6 +62,12 @@ delta_vel = 1
 
 # servo angle increment
 delta_ang = 5
+
+# exercise
+exercise_camera_amplitude_1 = 30.  # [deg]
+exercise_camera_amplitude_2 = 30.  # [deg]
+exercise_camera_freq_1 = .2  # [Hz]
+exercise_camera_freq_2 = .2  # [Hz]
 
 # start main loop
 prev_state = state.copy()
@@ -76,6 +84,18 @@ while True:
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       sys.exit(0)
+
+    if event.type == pygame.KEYUP:
+      if event.key == pygame.K_SPACE:
+        state["exercise"] = not state["exercise"]
+        if not state["exercise"]:
+          # exercise was stopped
+          state["vel_L"] = 0.
+          state["vel_C"] = 0.
+          state["vel_R"] = 0.
+          enable["vel_L"] = False
+          enable["vel_C"] = False
+          enable["vel_R"] = False
 
   if keys[pygame.K_q]:
       state["vel_L"] += delta_vel
@@ -113,18 +133,52 @@ while True:
   if keys[pygame.K_RIGHT]:
       state["aux_pos_1"] -= delta_ang
 
+  if state["exercise"]:
+    state["frame_idx"] += 1
+    state["t"] = state["frame_idx"] / 30.
+
+    on_ramp = 1.
+    if state["frame_idx"] < 120:
+      on_ramp = state["frame_idx"] / 120.
+
+    state["aux_pos_1"] = 90. + on_ramp * exercise_camera_amplitude_1 * math.sin(2 * math.pi * exercise_camera_freq_1 * state["t"])
+    state["aux_pos_2"] = 90. + on_ramp * exercise_camera_amplitude_2 * math.cos(2 * math.pi * exercise_camera_freq_2 * state["t"])
+
+    if state["frame_idx"] % 40 == 0:
+      state["vel_L"] = 128. - state["vel_L"]
+
+    if state["frame_idx"] % 50 == 0:
+      state["vel_R"] = 128. - state["vel_R"]
+
+    if state["frame_idx"] % 60 == 0:
+      state["vel_C"] = 128. - state["vel_C"]
+
+    enable["vel_L"] = state["vel_L"] != 0
+    enable["vel_R"] = state["vel_R"] != 0
+    enable["vel_C"] = state["vel_C"] != 0
+
+  text = font.render("Exercise: " + str(state["exercise"]), True, green, blue)
+  textRect = text.get_rect()
+  textRect.center = (screen_w // 2, screen_h // 2 - 140)
+  sc.blit(text, textRect)
+
+  text = font_small.render("press [space] to start/stop", False, green, blue)
+  textRect = text.get_rect()
+  textRect.center = (screen_w // 2, screen_h // 2 - 100)
+  sc.blit(text, textRect)
+
   for topic in ["aux_pos_1", "aux_pos_2"]:
       state[topic] = max(state[topic], 0)
       state[topic] = min(state[topic], 180)
 
   for i, topic in enumerate(["vel_L", "vel_C", "vel_R"]):
-    text = font.render('Motor ' + topic + ': ' + str(state[topic]), True, green, blue)
+    text = font.render("Motor " + topic + ": " + str(state[topic]), True, green, blue)
     textRect = text.get_rect()
     textRect.center = (screen_w // 2, screen_h // 2 + 60 * i)
     sc.blit(text, textRect)
 
   for i, topic in enumerate(["aux_pos_1", "aux_pos_2"]):
-    text = font.render('Servo ' + topic + ': ' + str(state[topic]), True, green, blue)
+    text = font.render("Servo " + topic + ": " + str(state[topic]), True, green, blue)
     textRect = text.get_rect()
     textRect.center = (screen_w // 2, screen_h // 2 + 60 * (3 + i))
     sc.blit(text, textRect)
