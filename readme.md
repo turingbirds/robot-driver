@@ -41,7 +41,7 @@ Supply rail transient response during the demo program (as in the video):
 
 ### Network
 
-![UDP network benchmarks for uncongested wifi](udp_benchmark_uncongested_wifi.png "Uncongested wifi") ![UDP network benchmarks for congested wifi](udp_benchmark_congested_wifi.png "Congested wifi")
+![UDP network benchmarks for uncongested wifi](network_benchmark/udp_benchmark_uncongested_wifi.png "Uncongested wifi") ![UDP network benchmarks for congested wifi](network_benchmark/udp_benchmark_congested_wifi.png "Congested wifi")
 
 
 ## License
