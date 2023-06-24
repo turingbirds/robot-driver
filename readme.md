@@ -34,11 +34,20 @@ Bill of materials: [CSV](bom.csv)
 Benchmarking
 ------------
 
+Driver hardware
+~~~~~~~~~~~~~~~
+
 Supply rail transient response during the demo program (as in the video):
 
 ![transients](https://user-images.githubusercontent.com/1014092/205522974-26e38b6e-1e94-4848-b9f2-b9c2e3c7a3d9.jpg)
 
 ![transients2](https://user-images.githubusercontent.com/1014092/205522979-7068d6bf-be71-4a43-afa0-1296b7fc97fe.jpg)
+
+
+Network
+~~~~~~~
+
+![UDP network benchmarks for uncongested wifi](udp_benchmark_uncongested_wifi.png "Uncongested wifi") ![UDP network benchmarks for congested wifi](udp_benchmark_congested_wifi.png "Congested wifi")
 
 
 License
