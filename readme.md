@@ -15,6 +15,7 @@ https://user-images.githubusercontent.com/1014092/205401948-c3db500c-c33b-486b-9
 - 3 encoder input channels for motor position
 - Wireless low-latency interface via MQTT
 - Battery powered with a 14.4 V Makita power tool battery
+- Unity VR interface
 
 
 ## Tech
