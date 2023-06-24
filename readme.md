@@ -1,5 +1,4 @@
-Robot driver
-============
+# Robot driver
 
 Heavy duty 12 V servo motor driver with Wifi link
 
@@ -10,8 +9,7 @@ https://user-images.githubusercontent.com/1014092/205401948-c3db500c-c33b-486b-9
 ![rear](https://user-images.githubusercontent.com/1014092/205522420-85adf3dc-d7ae-46b3-922f-ef1716646d62.jpeg)
 
 
-Features
---------
+## Features
 
 - 3 bidirectional motor outputs (motors wired as H-bridge; 6 output channels in total)
 - 3 encoder input channels for motor position
@@ -19,8 +17,7 @@ Features
 - Battery powered with a 14.4 V Makita power tool battery
 
 
-Tech
-----
+## Tech
 
 - ESP32 controller
 - BTS7960 driver for each output channel
@@ -31,11 +28,9 @@ PCB fits the case of a Makita battery charger.
 Bill of materials: [CSV](bom.csv)
 
 
-Benchmarking
-------------
+## Benchmarking
 
-Driver hardware
-~~~~~~~~~~~~~~~
+### Motor driver
 
 Supply rail transient response during the demo program (as in the video):
 
@@ -44,14 +39,12 @@ Supply rail transient response during the demo program (as in the video):
 ![transients2](https://user-images.githubusercontent.com/1014092/205522979-7068d6bf-be71-4a43-afa0-1296b7fc97fe.jpg)
 
 
-Network
-~~~~~~~
+### Network
 
 ![UDP network benchmarks for uncongested wifi](udp_benchmark_uncongested_wifi.png "Uncongested wifi") ![UDP network benchmarks for congested wifi](udp_benchmark_congested_wifi.png "Congested wifi")
 
 
-License
--------
+## License
 
 [Open source hardware](https://www.oshwa.org/) is hardware for which the design is made publicly available, so that anyone can study, modify, distribute, make, and sell the design or hardware based on that design, subject to the following license conditions.
 
@@ -59,7 +52,7 @@ Hardware licensed under the *CERN Open Hardware Licence Version 2 - Weakly Recip
 
 Software licensed under the *Apache License 2.0,* a copy of which is included at [apache_license_2.0.txt](https://github.com/turingbirds/robot-driver/blob/master/apache_license_2.0.txt).
 
-Credits
--------
+
+## Credits
 
 This project was co-produced by V2_ Lab for the Unstable Media as part of the Winter Sessions art and technology residencies. ♥️
