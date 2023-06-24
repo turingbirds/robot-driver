@@ -15,7 +15,7 @@ Features
 
 - 3 bidirectional motor outputs (motors wired as H-bridge; 6 output channels in total)
 - 3 encoder input channels for motor position
-- Wireless low-latency interface via MQTT
+- Wireless low-latency interface via UDP
 - Battery powered with a 14.4 V Makita power tool battery
 
 
