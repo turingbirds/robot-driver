@@ -35,11 +35,14 @@ import time
 import socket
 import sys
 
-UDP_IP = "192.168.1.125"#"192.168.1.229" 184
+
+FPS_CAP = 20
+
+UDP_IP = "192.168.1.184" #"125 184 229
 UDP_PORT = 1234
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.settimeout(.09) # timeout in seconds -- just a little bit shorter than the framerate
+sock.settimeout(.09) # timeout in seconds
 
 screen_w = 800
 screen_h = 600
@@ -200,7 +203,8 @@ while True:
 		if topic.startswith("aux_pos"):
 			udp_message[topic] = state[topic]
 
-	if str(prev_udp_message) != str(udp_message):
+	#if str(prev_udp_message) != str(udp_message):   # only send a UDP packet when the state changed
+	if True:  # send a message every frame -- prevent triggering the network timeout safety feature on the robot
 		print("Sending: " + str(json.dumps(udp_message)))
 
 		sock.sendto(bytes(json.dumps(udp_message), "utf-8"), (UDP_IP, UDP_PORT))
@@ -217,9 +221,10 @@ while True:
 
 
 	now = datetime.datetime.now()
-	if prev:
-		print("Time " + str(now-prev ))
-	prev = now
 
-	dt = clock.tick(20) # cap to 10 fps
-	print("Time: " + str(dt))
+	dt = clock.tick(FPS_CAP) # cap to this many fps
+
+	if prev:
+		print("Time per frame: " + str((now - prev).microseconds / 1000) + " ms (measured) = " + str(dt) + " (reported by pygame)")
+
+	prev = now
