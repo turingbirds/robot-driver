@@ -25,6 +25,7 @@ Qty,Identifier,Description,Value,Package,,Price/1,Price (tot)
 4,"X1, X6, X7, X8",Screw terminals 10 mm pitch,,,,0.18,0.72
 1,,jumper,,,,,
 3,"JP1, JP2, JP3",IDC header 2-pin,,,,,
+1,,Socket for ESP32 (2x 19 pin female IDC),,,,,
 ,J6,Header (optional),,,,,
 ,,,,,,,
 1,IC2,ESP32-DEVKIT,,,,5,5
