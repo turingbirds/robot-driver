@@ -329,7 +329,7 @@
 <text x="167.5" y="-17" size="1.5" layer="51" font="vector" ratio="18" rot="SR0">BAT</text>
 <text x="168.5" y="-18.5" size="1.5" layer="51" font="vector" ratio="18">+</text>
 <text x="220" y="-64.5" size="2.5" layer="52" font="vector" ratio="18" rot="MR0">Robot controller
-v1.2 - feb 2023</text>
+v1.3 - Jul 2023</text>
 <text x="171" y="-17" size="1.5" layer="52" font="vector" ratio="18" rot="SMR0">BAT</text>
 <text x="169.5" y="-18.5" size="1.5" layer="52" font="vector" ratio="18" rot="MR0">+</text>
 <text x="191" y="0" size="1.5" layer="52" font="vector" ratio="18" rot="SMR0">BAT</text>
@@ -352,17 +352,25 @@ v1.2 - feb 2023</text>
 <wire x1="288.5" y1="-64" x2="291.5" y2="-64" width="0.2" layer="51"/>
 <wire x1="291.5" y1="-64" x2="292" y2="-64.5" width="0.2" layer="51"/>
 <text x="284" y="-55.75" size="1.27" layer="51" font="vector" ratio="18" rot="SR0">ENABLE</text>
-<text x="297.445" y="-40.84" size="1.27" layer="51" font="vector" ratio="18" rot="SR90">VBATT</text>
-<wire x1="297.5" y1="-34.5" x2="296" y2="-34.5" width="0.2" layer="51"/>
-<wire x1="296" y1="-34.5" x2="295.5" y2="-35" width="0.2" layer="51"/>
-<wire x1="295.5" y1="-35" x2="295.5" y2="-40" width="0.2" layer="51"/>
-<wire x1="295.5" y1="-40" x2="293.5" y2="-42" width="0.2" layer="51"/>
-<wire x1="293.5" y1="-42" x2="293.5" y2="-44" width="0.2" layer="51"/>
-<wire x1="293.5" y1="-44" x2="295" y2="-45.5" width="0.2" layer="51"/>
-<wire x1="295" y1="-45.5" x2="297" y2="-45.5" width="0.2" layer="51"/>
-<wire x1="297.5" y1="-34.5" x2="298" y2="-35" width="0.2" layer="51"/>
-<wire x1="298" y1="-35" x2="298" y2="-44.5" width="0.2" layer="51"/>
-<wire x1="298" y1="-44.5" x2="297" y2="-45.5" width="0.2" layer="51"/>
+<text x="297.195" y="-40.84" size="1.27" layer="51" font="vector" ratio="18" rot="SR90">+12V</text>
+<wire x1="297.5" y1="-35.5" x2="295.5" y2="-35.5" width="0.2" layer="51"/>
+<wire x1="295.5" y1="-35.5" x2="295" y2="-36" width="0.2" layer="51"/>
+<wire x1="295" y1="-36" x2="295" y2="-44.5" width="0.2" layer="51"/>
+<wire x1="295" y1="-44.5" x2="295.5" y2="-45" width="0.2" layer="51"/>
+<wire x1="295.5" y1="-45" x2="297.5" y2="-45" width="0.2" layer="51"/>
+<wire x1="297.5" y1="-35.5" x2="298" y2="-36" width="0.2" layer="51"/>
+<wire x1="298" y1="-36" x2="298" y2="-44.5" width="0.2" layer="51"/>
+<wire x1="298" y1="-44.5" x2="297.5" y2="-45" width="0.2" layer="51"/>
+<circle x="198.5" y="-1.5" radius="2.828425" width="0.6096" layer="51"/>
+<text x="196.5" y="-7" size="1.5" layer="51" font="vector" ratio="18" rot="SR0">GND</text>
+<text x="200.5" y="-7" size="1.5" layer="52" font="vector" ratio="18" rot="SMR0">GND</text>
+<circle x="172" y="-37" radius="2.828425" width="0.6096" layer="51"/>
+<text x="165" y="-41" size="1.5" layer="51" font="vector" ratio="18">+12V</text>
+<text x="170.5" y="-41" size="1.5" layer="52" font="vector" ratio="18" rot="MR0">+12V</text>
+<circle x="169" y="-22" radius="2.828425" width="0.6096" layer="52"/>
+<circle x="172" y="-37" radius="2.828425" width="0.6096" layer="52"/>
+<circle x="198.5" y="-1.5" radius="2.828425" width="0.6096" layer="52"/>
+<circle x="186" y="-3" radius="2.828425" width="0.6096" layer="52"/>
 </plain>
 <libraries>
 <library name="ESP32-DEVKIT-V1">
@@ -1594,6 +1602,19 @@ grid 5.08 mm, diameter 10.5 mm</description>
 <rectangle x1="0.9525" y1="-0.8763" x2="1.6891" y2="0.8763" layer="51"/>
 <rectangle x1="-0.3" y1="-0.7" x2="0.3" y2="0.7" layer="35"/>
 </package>
+<package name="0411V">
+<description>&lt;b&gt;RESISTOR&lt;/b&gt;&lt;p&gt;
+type 0411, grid 3.81 mm</description>
+<wire x1="1.27" y1="0" x2="0.3048" y2="0" width="0.762" layer="51"/>
+<wire x1="-1.5748" y1="0" x2="-2.54" y2="0" width="0.762" layer="51"/>
+<circle x="-2.54" y="0" radius="2.032" width="0.1524" layer="21"/>
+<circle x="-2.54" y="0" radius="1.016" width="0.1524" layer="51"/>
+<pad name="1" x="-2.54" y="0" drill="0.9144" shape="octagon"/>
+<pad name="2" x="1.27" y="0" drill="0.9144" shape="octagon"/>
+<text x="-0.508" y="1.143" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="-0.5334" y="-2.413" size="1.27" layer="27" ratio="10">&gt;VALUE</text>
+<rectangle x1="-1.4732" y1="-0.381" x2="0.2032" y2="0.381" layer="21"/>
+</package>
 <package name="0617V">
 <description>&lt;b&gt;RESISTOR&lt;/b&gt;&lt;p&gt;
 type 0617, grid 5 mm</description>
@@ -1606,6 +1627,30 @@ type 0617, grid 5 mm</description>
 <text x="0.635" y="1.4224" size="1.27" layer="25" ratio="10">&gt;NAME</text>
 <text x="0.635" y="-2.6162" size="1.27" layer="27" ratio="10">&gt;VALUE</text>
 <rectangle x1="-1.3208" y1="-0.4064" x2="1.3208" y2="0.4064" layer="21"/>
+</package>
+<package name="C025-025X050">
+<description>&lt;b&gt;CAPACITOR&lt;/b&gt;&lt;p&gt;
+grid 2.5 mm, outline 2.5 x 5 mm</description>
+<wire x1="-2.159" y1="1.27" x2="2.159" y2="1.27" width="0.1524" layer="21"/>
+<wire x1="2.159" y1="-1.27" x2="-2.159" y2="-1.27" width="0.1524" layer="21"/>
+<wire x1="2.413" y1="1.016" x2="2.413" y2="-1.016" width="0.1524" layer="21"/>
+<wire x1="-2.413" y1="1.016" x2="-2.413" y2="-1.016" width="0.1524" layer="21"/>
+<wire x1="2.159" y1="1.27" x2="2.413" y2="1.016" width="0.1524" layer="21" curve="-90"/>
+<wire x1="-2.413" y1="1.016" x2="-2.159" y2="1.27" width="0.1524" layer="21" curve="-90"/>
+<wire x1="2.159" y1="-1.27" x2="2.413" y2="-1.016" width="0.1524" layer="21" curve="90"/>
+<wire x1="-2.413" y1="-1.016" x2="-2.159" y2="-1.27" width="0.1524" layer="21" curve="90"/>
+<wire x1="0.762" y1="0" x2="0.381" y2="0" width="0.1524" layer="51"/>
+<wire x1="0.381" y1="0" x2="0.254" y2="0" width="0.1524" layer="21"/>
+<wire x1="0.254" y1="0" x2="0.254" y2="0.762" width="0.254" layer="21"/>
+<wire x1="0.254" y1="0" x2="0.254" y2="-0.762" width="0.254" layer="21"/>
+<wire x1="-0.254" y1="0.762" x2="-0.254" y2="0" width="0.254" layer="21"/>
+<wire x1="-0.254" y1="0" x2="-0.254" y2="-0.762" width="0.254" layer="21"/>
+<wire x1="-0.254" y1="0" x2="-0.381" y2="0" width="0.1524" layer="21"/>
+<wire x1="-0.381" y1="0" x2="-0.762" y2="0" width="0.1524" layer="51"/>
+<pad name="1" x="-1.27" y="0" drill="0.8128" shape="octagon"/>
+<pad name="2" x="1.27" y="0" drill="0.8128" shape="octagon"/>
+<text x="-2.286" y="1.524" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="-2.286" y="-2.794" size="1.27" layer="27" ratio="10">&gt;VALUE</text>
 </package>
 <package name="C050-030X075">
 <description>&lt;b&gt;CAPACITOR&lt;/b&gt;&lt;p&gt;
@@ -2133,6 +2178,23 @@ grid 2.54 mm</description>
 </package>
 </packages>
 </library>
+<library name="SparkFun">
+<description>Spark Fun Electronics' preferred foot prints. &lt;b&gt;Not to be used for commercial purposes.&lt;/b&gt; We've spent an enormous amount of time creating and checking these footprints and parts. If you enjoy using this library, please buy one of our products at www.sparkfun.com.</description>
+<packages>
+<package name="1X01_LONGPAD">
+<wire x1="1.016" y1="1.016" x2="1.27" y2="0.635" width="0.2032" layer="21"/>
+<wire x1="1.27" y1="-0.635" x2="1.016" y2="-1.016" width="0.2032" layer="21"/>
+<wire x1="-1.27" y1="0.635" x2="-1.27" y2="-0.635" width="0.2032" layer="21"/>
+<wire x1="-1.016" y1="1.016" x2="-1.27" y2="0.635" width="0.2032" layer="21"/>
+<wire x1="-1.27" y1="-0.635" x2="-1.016" y2="-1.016" width="0.2032" layer="21"/>
+<wire x1="1.27" y1="0.635" x2="1.27" y2="-0.635" width="0.2032" layer="21"/>
+<pad name="1" x="0" y="0" drill="1.016" shape="long" rot="R90"/>
+<text x="-1.3462" y="1.8288" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="-1.27" y="-3.175" size="1.27" layer="27">&gt;VALUE</text>
+<rectangle x1="-0.254" y1="-0.254" x2="0.254" y2="0.254" layer="51"/>
+</package>
+</packages>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -2419,7 +2481,7 @@ design rules under a new name.</description>
 <element name="C27" library="rcl" package="C1206" value="" x="228" y="-30"/>
 <element name="C28" library="rcl" package="C1206" value="" x="228" y="-27.5"/>
 <element name="C29" library="rcl" package="C1206" value="" x="212" y="-27.5"/>
-<element name="C30" library="rcl" package="C1206" value="" x="172" y="-35.5" rot="R180"/>
+<element name="C30" library="rcl" package="C1206" value="" x="166.5" y="-33" rot="R180"/>
 <element name="C31" library="rcl" package="C1206" value="" x="260" y="-30"/>
 <element name="C32" library="rcl" package="C1206" value="" x="244" y="-27.5"/>
 <element name="C33" library="rcl" package="C1206" value="" x="260" y="-27.5"/>
@@ -2474,9 +2536,8 @@ design rules under a new name.</description>
 <element name="C40" library="rcl" package="C1206" value="" x="181" y="-47" rot="R270"/>
 <element name="R13" library="rcl" package="R1206" value="5k" x="284.5" y="-45" rot="R90"/>
 <element name="C24" library="rcl" package="E5-10,5" value="" x="165" y="-46" rot="R180"/>
-<element name="R15" library="rcl" package="0617V" value="" x="165.5" y="-35"/>
-<element name="C20" library="rcl" package="C050-030X075" value="" x="171" y="-39"/>
-<element name="C1" library="rcl" package="C050-030X075" value="" x="169" y="-39"/>
+<element name="R15" library="rcl" package="0411V" value="" x="166" y="-38.5"/>
+<element name="C1" library="rcl" package="C025-025X050" value="" x="172" y="-42"/>
 <element name="R16" library="rcl" package="R1206" value="10k" x="280.46" y="-50.02"/>
 <element name="L1" library="inductors" package="82114R" value="82114R" x="175" y="-51"/>
 <element name="Q1" library="transistor-power" package="TO220BV" value="IRLB8743" x="190" y="-4" rot="R90"/>
@@ -2493,6 +2554,8 @@ design rules under a new name.</description>
 <element name="C45" library="rcl" package="C1206" value="" x="216" y="-58.5" rot="R90"/>
 <element name="JP_A1" library="jumper" package="JP1" value="" x="290" y="-69.5" rot="R180"/>
 <element name="JP_A0" library="jumper" package="JP1" value="" x="286" y="-69.5" rot="R180"/>
+<element name="C10" library="rcl" package="C1206" value="" x="166.5" y="-35" rot="R180"/>
+<element name="JP4" library="SparkFun" package="1X01_LONGPAD" value="M01PTH_LONGPAD" x="296.5" y="-43" rot="R180"/>
 </elements>
 <signals>
 <signal name="GND">
@@ -2598,8 +2661,8 @@ design rules under a new name.</description>
 <via x="276" y="-41" extent="1-16" drill="0.5"/>
 <via x="188" y="-41" extent="1-16" drill="0.5"/>
 <via x="183" y="-41" extent="1-16" drill="0.5"/>
-<via x="172" y="-32" extent="1-16" drill="0.5"/>
-<via x="172" y="-26" extent="1-16" drill="0.5"/>
+<via x="163.5" y="-33" extent="1-16" drill="0.5"/>
+<via x="169" y="-29" extent="1-16" drill="0.5"/>
 <via x="196.5" y="-24.5" extent="1-16" drill="0.5"/>
 <via x="244" y="-25" extent="1-16" drill="0.5"/>
 <via x="245.5" y="-25" extent="1-16" drill="0.5"/>
@@ -2608,8 +2671,12 @@ design rules under a new name.</description>
 <vertex x="162" y="-26"/>
 <vertex x="173" y="-26"/>
 <vertex x="174" y="-27"/>
-<vertex x="174" y="-39"/>
-<vertex x="175" y="-40"/>
+<vertex x="174" y="-30"/>
+<vertex x="173.5" y="-30.5"/>
+<vertex x="169" y="-30.5"/>
+<vertex x="168" y="-31.5"/>
+<vertex x="168" y="-37.5"/>
+<vertex x="170.5" y="-40"/>
 <vertex x="290.5" y="-40"/>
 <vertex x="293" y="-42.5"/>
 <vertex x="293" y="-51"/>
@@ -2704,7 +2771,6 @@ design rules under a new name.</description>
 <via x="190.5" y="-19" extent="1-16" drill="0.5"/>
 <via x="197" y="-11" extent="1-16" drill="0.5"/>
 <via x="197" y="-5" extent="1-16" drill="0.5"/>
-<via x="197" y="-2" extent="1-16" drill="0.5"/>
 <via x="195.5" y="-24.5" extent="1-16" drill="0.5"/>
 <via x="191" y="-23" extent="1-16" drill="0.5"/>
 <via x="193" y="-25" extent="1-16" drill="0.5"/>
@@ -2768,8 +2834,6 @@ design rules under a new name.</description>
 <via x="208" y="0.5" extent="1-16" drill="0.5"/>
 <via x="205.5" y="0.5" extent="1-16" drill="0.5"/>
 <via x="203" y="0.5" extent="1-16" drill="0.5"/>
-<via x="200.5" y="0.5" extent="1-16" drill="0.5"/>
-<via x="197.5" y="0.5" extent="1-16" drill="0.5"/>
 <via x="281.94" y="-66.04" extent="1-16" drill="0.9" diameter="1.9304" shape="square"/>
 <via x="281.94" y="-63.5" extent="1-16" drill="0.9" diameter="1.9304" shape="square"/>
 <via x="281.94" y="-60.96" extent="1-16" drill="0.9" diameter="1.9304" shape="square"/>
@@ -2815,6 +2879,9 @@ design rules under a new name.</description>
 <via x="274.32" y="-66.04" extent="1-16" drill="0.9" diameter="1.9304" shape="square"/>
 <via x="276.86" y="-66.04" extent="1-16" drill="0.9" diameter="1.9304" shape="square"/>
 <via x="279.4" y="-66.04" extent="1-16" drill="0.9" diameter="1.9304" shape="square"/>
+<via x="198.5" y="-1.5" extent="1-16" drill="2.5" diameter="4.5"/>
+<via x="163.5" y="-35" extent="1-16" drill="0.5"/>
+<contactref element="C10" pad="2"/>
 </signal>
 <signal name="+5V">
 <contactref element="IC2" pad="38"/>
@@ -3039,8 +3106,8 @@ design rules under a new name.</description>
 <contactref element="C33" pad="1"/>
 <contactref element="C34" pad="1"/>
 <polygon width="0.4064" layer="16" thermals="no">
-<vertex x="176" y="-37"/>
-<vertex x="177" y="-38"/>
+<vertex x="169.5" y="-36.5"/>
+<vertex x="171" y="-38"/>
 <vertex x="290" y="-38"/>
 <vertex x="293.5" y="-41.5"/>
 <vertex x="293.5" y="-51.5"/>
@@ -3056,9 +3123,11 @@ design rules under a new name.</description>
 <vertex x="182.5" y="-16.5"/>
 <vertex x="182" y="-17"/>
 <vertex x="182" y="-22"/>
-<vertex x="178" y="-26"/>
-<vertex x="177" y="-26"/>
-<vertex x="176" y="-27"/>
+<vertex x="176" y="-28"/>
+<vertex x="176" y="-30.5"/>
+<vertex x="175" y="-31.5"/>
+<vertex x="170" y="-31.5"/>
+<vertex x="169.5" y="-32"/>
 </polygon>
 <contactref element="IC7" pad="7"/>
 <contactref element="IC8" pad="7"/>
@@ -3165,7 +3234,6 @@ design rules under a new name.</description>
 <wire x1="289" y1="-28" x2="288.5" y2="-28.5" width="0.8" layer="1"/>
 <wire x1="288.5" y1="-28.5" x2="288" y2="-28.5" width="0.8" layer="1"/>
 <wire x1="289" y1="-30" x2="288.5" y2="-29.5" width="0.8" layer="1"/>
-<contactref element="C20" pad="2"/>
 <contactref element="C1" pad="2"/>
 <wire x1="242.6" y1="-27.5" x2="242.6" y2="-29.4" width="0.8" layer="1"/>
 <wire x1="242.6" y1="-29.4" x2="242" y2="-30" width="0.8" layer="1"/>
@@ -3270,14 +3338,8 @@ design rules under a new name.</description>
 <wire x1="209.5" y1="-30" x2="210" y2="-30.5" width="0.8" layer="1"/>
 <wire x1="210" y1="-30.5" x2="210.5" y2="-30.5" width="0.8" layer="1"/>
 <via x="196.5" y="-34.5" extent="1-16" drill="0.5"/>
-<via x="195" y="-31.5" extent="1-16" drill="0.5"/>
+<via x="194.5" y="-31" extent="1-16" drill="0.5"/>
 <via x="195.5" y="-34.5" extent="1-16" drill="0.5"/>
-<wire x1="173.54" y1="-39" x2="176" y2="-39" width="1.5" layer="1"/>
-<wire x1="176" y1="-39" x2="178.54" y2="-36.46" width="1.5" layer="1"/>
-<wire x1="180" y1="-36.46" x2="178.54" y2="-36.46" width="1.5" layer="1"/>
-<wire x1="173.54" y1="-39" x2="171.54" y2="-39" width="1.5" layer="1"/>
-<wire x1="173.4" y1="-35.5" x2="174.36" y2="-36.46" width="1.5" layer="1"/>
-<wire x1="174.36" y1="-36.46" x2="180" y2="-36.46" width="1.5" layer="1"/>
 <via x="192.5" y="-29.5" extent="1-16" drill="0.5"/>
 <via x="193.5" y="-29.5" extent="1-16" drill="0.5"/>
 <contactref element="R17" pad="2"/>
@@ -3305,7 +3367,22 @@ design rules under a new name.</description>
 <vertex x="182.5" y="-22.5"/>
 <vertex x="182" y="-22"/>
 </polygon>
-<via x="296" y="-43" extent="1-16" drill="1.5" diameter="3"/>
+<wire x1="179.96" y1="-36.5" x2="180" y2="-36.46" width="1.5" layer="1"/>
+<via x="172" y="-37" extent="1-16" drill="2.5" diameter="4.5"/>
+<via x="169.5" y="-33" extent="1-16" drill="0.5"/>
+<contactref element="C10" pad="1"/>
+<wire x1="173.27" y1="-42" x2="173.27" y2="-38.27" width="1.5" layer="1"/>
+<wire x1="173.27" y1="-38.27" x2="172" y2="-37" width="1.5" layer="1"/>
+<wire x1="167.9" y1="-33" x2="169.5" y2="-33" width="1.5" layer="1"/>
+<wire x1="167.9" y1="-35" x2="169.5" y2="-35" width="1.5" layer="1"/>
+<wire x1="169.5" y1="-35" x2="171" y2="-35" width="1.5" layer="1"/>
+<wire x1="171" y1="-35" x2="172" y2="-36" width="1.5" layer="1"/>
+<wire x1="172" y1="-36" x2="172" y2="-37" width="1.5" layer="1"/>
+<wire x1="169.5" y1="-33" x2="169.5" y2="-33.5" width="1.5" layer="1"/>
+<wire x1="169.5" y1="-33.5" x2="169.5" y2="-35" width="1.5" layer="1"/>
+<wire x1="171" y1="-35" x2="169.5" y2="-33.5" width="1.5" layer="1"/>
+<via x="169.5" y="-35" extent="1-16" drill="0.5"/>
+<contactref element="JP4" pad="1"/>
 <wire x1="274.5" y1="-27" x2="274.6" y2="-27.5" width="0" layer="19" extent="1-1"/>
 <wire x1="226.6" y1="-27.5" x2="226.5" y2="-27.5" width="0" layer="19" extent="1-1"/>
 <wire x1="209.7475" y1="-30" x2="210" y2="-30" width="0" layer="19" extent="1-1"/>
@@ -3601,8 +3678,8 @@ design rules under a new name.</description>
 <contactref element="IC6" pad="8"/>
 <polygon width="0.4064" layer="1" isolate="0.5" thermals="no" rank="3">
 <vertex x="199" y="-23.5"/>
-<vertex x="199" y="-2"/>
-<vertex x="200" y="-1"/>
+<vertex x="199" y="-6"/>
+<vertex x="204" y="-1"/>
 <vertex x="214" y="-1"/>
 <vertex x="215" y="-2"/>
 <vertex x="215" y="-10"/>
@@ -3615,8 +3692,8 @@ design rules under a new name.</description>
 <wire x1="204" y1="-29.2075" x2="204" y2="-19.105" width="0.8128" layer="1"/>
 <polygon width="0.4064" layer="16" isolate="0.5" thermals="no" rank="3">
 <vertex x="199" y="-23.5"/>
-<vertex x="199" y="-2"/>
-<vertex x="200" y="-1"/>
+<vertex x="199" y="-6"/>
+<vertex x="204" y="-1"/>
 <vertex x="214" y="-1"/>
 <vertex x="215" y="-2"/>
 <vertex x="215" y="-10"/>
@@ -3626,7 +3703,6 @@ design rules under a new name.</description>
 <vertex x="199.5" y="-24"/>
 </polygon>
 <via x="201" y="-12" extent="1-16" drill="0.5" diameter="0.9"/>
-<via x="201" y="-2" extent="1-16" drill="0.5" diameter="0.9"/>
 <via x="213" y="-2" extent="1-16" drill="0.5" diameter="0.9"/>
 <via x="207" y="-7" extent="1-16" drill="0.5" diameter="0.9"/>
 <via x="201" y="-7" extent="1-16" drill="0.5" diameter="0.9"/>
@@ -3864,12 +3940,9 @@ design rules under a new name.</description>
 </signal>
 <signal name="N$26">
 <contactref element="R15" pad="2"/>
-<contactref element="C20" pad="1"/>
 <contactref element="C1" pad="1"/>
-<wire x1="168.04" y1="-35" x2="168.04" y2="-38.58" width="1.5" layer="1"/>
-<wire x1="168.04" y1="-38.58" x2="168.46" y2="-39" width="1.5" layer="1"/>
-<wire x1="168.04" y1="-38.58" x2="167.62" y2="-39" width="1.5" layer="1"/>
-<wire x1="167.62" y1="-39" x2="166.46" y2="-39" width="1.5" layer="1"/>
+<wire x1="167.27" y1="-38.5" x2="167.27" y2="-38.54" width="1.5" layer="16"/>
+<wire x1="167.27" y1="-38.54" x2="170.73" y2="-42" width="1.5" layer="16"/>
 </signal>
 <signal name="N$27">
 <contactref element="JP2" pad="2"/>
