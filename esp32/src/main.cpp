@@ -16,8 +16,12 @@ Apache License 2.0
 **/
 
 // warning!! Enabling serial debug will increase response latency
+// set to 1 for on, 0 for off.
 #define SERIAL_DEBUG 1
 #define SERIAL_DEBUG_DETAILED 0
+
+// broadcast our hardware and IP address over UDP?
+#define UDP_BROADCAST 1
 
 #include <esp_task_wdt.h>
 
@@ -31,10 +35,10 @@ Apache License 2.0
 // const char* ssid = "v2vr";
 // const char* password = "1098217356521888";
 
-#define WIFI_SSID "v2vr"
-#define WIFI_PSK  "1098217356521888"
-// #define WIFI_SSID "Qeske Open"
-// #define WIFI_PSK  "OpenWifi*"
+// #define WIFI_SSID "v2vr"
+// #define WIFI_PSK  "1098217356521888"
+#define WIFI_SSID "Qeske Open"
+#define WIFI_PSK  "OpenWifi*"
 
 #include <Esp.h>
 #include "esp_system.h"
@@ -44,12 +48,15 @@ Apache License 2.0
 #include <ArduinoJson.h>
 #include "AsyncUDP.h"
 
+
 // demo mode: no wifi and MQTT, just pulse motors one after the other
 #define DEMO_MODE 0
 #define DEMO_MODE_ADC_READING 0
 
 // use feedback encoders/servo mode for main motors
 #define USE_ENCODERS 0
+
+#define MEASURE_MOTOR_ABSOLUTE_ANGLE 1
 
 // control small "normal" PWM servo motors (pins shared with encoder inputs--select only one at a time)
 #define AUX_SERVO_CONTROLLER 1
@@ -59,6 +66,11 @@ Apache License 2.0
 
 // ----------------------------------------------------------------------------
 // definitions
+
+#define ADDRESS_SELECT_A0_PIN 35
+#define ADDRESS_SELECT_A1_PIN 25
+
+volatile size_t hardware_address = 0;
 
 #define PWM_RESOLUTION 8
 #define PWM_FREQ  25000
@@ -88,6 +100,11 @@ Apache License 2.0
 #define ENCODER_C_DT_PIN 32
 #endif
 
+#if MEASURE_MOTOR_ABSOLUTE_ANGLE
+#define MOTOR_L_ZERO_SWITCH_PIN 26
+#define MOTOR_R_ZERO_SWITCH_PIN 34
+#endif
+
 #if AUX_SERVO_CONTROLLER
 #define AUX_SERVO_PWM_FREQ     50
 #define AUX_SERVO_PWM_RESOLUTION  8
@@ -103,6 +120,9 @@ Apache License 2.0
 
 const unsigned int min_dutycycle = 30;  // allow transistor to turn fully on before turning it off on heavy loads (transistor spends too much time in linear range below this value)
 const unsigned int max_dutycycle = 211;  // 14.4V supply for a 12V motor -> 83% max duty = 211/255. In the future this could be made dependent on measured battery voltage
+
+// 3 seconds WDT
+#define WDT_TIMEOUT 3
 
 #if AUX_SERVO_CONTROLLER
 #include <ESP32Servo.h>
@@ -140,6 +160,12 @@ volatile int vel_L = 0;
 volatile int vel_R = 0;
 volatile int vel_C = 0;
 
+volatile unsigned int enable_L = 1;   // set to 0 to disable motor
+volatile unsigned int enable_R = 1;   // set to 0 to disable motor
+
+volatile unsigned int stop_motor_L_at_zero = 0; // set to 1 to activate
+volatile unsigned int stop_motor_R_at_zero = 0; // set to 1 to activate
+
 #if AUX_SERVO_CONTROLLER
 // initial servo positions
 volatile unsigned int aux_pos_1 = 90;
@@ -154,16 +180,26 @@ Servo aux_servo_2;
 
 
 
-
+//
+// void IRAM_ATTR MOTOR_L_PIN_CHANGE_ISR() {
+// 	if (stop_motor_L_at_zero) {
+// 		enable_L = 0;
+// 	}
+// }
+//
+// void IRAM_ATTR MOTOR_R_PIN_CHANGE_ISR() {
+// 	if (stop_motor_R_at_zero) {
+// 		enable_R = 0;
+// 	}
+// }
 
 
 
 
 void init_udp_listener() {
 	if (udp.listen(1234)) {
-		Serial.print("UDP Listening on IP: ");
-		Serial.println(WiFi.localIP());
 		udp.onPacket([](AsyncUDPPacket packet) {
+
 #if SERIAL_DEBUG
 			Serial.print("[host -> esp32] UDP Packet Type: ");
 			Serial.print(packet.isBroadcast() ? "Broadcast" : packet.isMulticast() ? "Multicast" : "Unicast");
@@ -181,6 +217,9 @@ void init_udp_listener() {
 			Serial.write(packet.data(), packet.length());
 			Serial.println();
 #endif
+
+			if (packet.isBroadcast()) return;
+
 			// reset packet timeout
 			udp_time_since_last_packet = 0;
 
@@ -203,22 +242,41 @@ void init_udp_listener() {
 			vel_L = doc["vel_L"];
 			vel_C = doc["vel_C"];
 			vel_R = doc["vel_R"];
-			#if AUX_SERVO_CONTROLLER
+			stop_motor_L_at_zero = doc["stop_motor_L_at_zero"];
+			stop_motor_R_at_zero = doc["stop_motor_R_at_zero"];
+			if (doc["enable_R"]) {
+				enable_R = 1;
+			}
+			if (doc["enable_L"]) {
+				enable_L = 1;
+			}
+#if AUX_SERVO_CONTROLLER
 			unsigned int aux_pos_1_new = doc["aux_pos_1"];
 			aux_pos_1_new = MIN(MAX_AUX_POS_1, aux_pos_1_new);
 			aux_pos_1_new = MAX(MIN_AUX_POS_1, aux_pos_1_new);
 			aux_pos_1 = aux_pos_1_new;
 			aux_pos_2 = doc["aux_pos_2"];
-			#endif
+#endif
 
 			// packet.printf("[esp32 -> host] received %u bytes of data", packet.length());
-			packet.printf("{\"battery_voltage\": %f, \"free_heap\": %d}", bat_volt_adc_corrected, ESP.getFreeHeap());
+			packet.printf("{\"battery_voltage\": %f, \"free_heap\": %d, \"sw_L\": %d, \"sw_R\": %d}", bat_volt_adc_corrected, ESP.getFreeHeap(),
+			digitalRead(MOTOR_L_ZERO_SWITCH_PIN), digitalRead(MOTOR_R_ZERO_SWITCH_PIN));
 		});
 	}
 }
 
+void init_address_select() {
+	pinMode(ADDRESS_SELECT_A0_PIN, INPUT_PULLUP);  // Set the pin as input
+	pinMode(ADDRESS_SELECT_A1_PIN, INPUT_PULLUP);  // Set the pin as input
+}
 
-void init_servos() {
+void read_address_select() {
+	const size_t A_0 = digitalRead(ADDRESS_SELECT_A0_PIN);
+	const size_t A_1 = digitalRead(ADDRESS_SELECT_A1_PIN);
+	hardware_address = (1 - A_0) | ((1 - A_1) << 1);
+}
+
+void init_motors() {
   ledcSetup(MOTOR_L_PWM_CHANNEL_A, PWM_FREQ, PWM_RESOLUTION);
   ledcSetup(MOTOR_L_PWM_CHANNEL_B, PWM_FREQ, PWM_RESOLUTION);
   ledcSetup(MOTOR_R_PWM_CHANNEL_A, PWM_FREQ, PWM_RESOLUTION);
@@ -240,19 +298,18 @@ void init_servos() {
 
 void setup() {
 #if SERIAL_DEBUG
-	delay(1000);
-	// For logging
-	Serial.begin(115200);
+  	delay(2000);
+  	Serial.begin(115200);
 
-	Serial.println("Setting up WDT");
-// 3 seconds WDT
-#define WDT_TIMEOUT 3
-	esp_task_wdt_init(WDT_TIMEOUT, true);
-	esp_task_wdt_add(NULL);
+  	Serial.println("Setting up WDT");
+  	esp_task_wdt_init(WDT_TIMEOUT, true);
+  	esp_task_wdt_add(NULL);
 
-	// Connect to WiFi
-	Serial.println("Setting up WiFi");
+  	// Connect to WiFi
+  	Serial.println("Setting up WiFi");
 #endif
+		init_address_select();
+		read_address_select();
 
 		WiFi.setSleep(false);
 	  WiFi.begin(WIFI_SSID, WIFI_PSK);
@@ -267,12 +324,12 @@ void setup() {
 		Serial.print("CPU frequency: ");
 		Serial.println(getCpuFrequencyMhz());
 
-
-
+		// init ADC
 	  adcAttachPin(BAT_VOLT_ADC_PIN);
 	  analogSetPinAttenuation(BAT_VOLT_ADC_PIN, ADC_2_5db);    // The input voltage of ADC will be attenuated, extending the range of measurement to up to approx. 1100 mV. (1V input = ADC reading of 3722)
 
-	  init_servos();
+		// initialize and power on the motors
+	  init_motors();
 
 	// #if AUX_SERVO_CONTROLLER
 	//   ledcSetup(AUX_SERVO_PWM_CHANNEL_1, AUX_SERVO_PWM_FREQ, AUX_SERVO_PWM_RESOLUTION);
@@ -290,6 +347,12 @@ void setup() {
 	  aux_servo_1.attach(AUX_SERVO_1_PIN, 500, 2400);
 	  aux_servo_2.attach(AUX_SERVO_2_PIN, 500, 2400);
 #endif
+
+  pinMode(MOTOR_L_ZERO_SWITCH_PIN, INPUT_PULLDOWN);  // Set the pin as input
+	pinMode(MOTOR_R_ZERO_SWITCH_PIN, INPUT_PULLDOWN);  // Set the pin as input
+	//attachInterrupt(MOTOR_L_ZERO_SWITCH_PIN, MOTOR_L_PIN_CHANGE_ISR, RISING);
+	//attachInterrupt(MOTOR_R_ZERO_SWITCH_PIN, MOTOR_R_PIN_CHANGE_ISR, RISING);
+
 
 
 	init_udp_listener();
@@ -409,14 +472,38 @@ void demo_mode_loop() {
 }
 #endif
 
+volatile float motor_l_zero_switch_pin = 0.;
+volatile float motor_r_zero_switch_pin = 0.;
+
+void read_battery_voltage() {
+	const float bat_volt_adc_raw = analogRead(BAT_VOLT_ADC_PIN);
+	const float bat_volt_adc = bat_volt_adc_raw * 0.0067;
+	bat_volt_adc_corrected = bat_volt_adc + (20. - bat_volt_adc) / 20.; // some ad-hoc correction of the horrible ADC nonlinearity
+}
+
 void loop() {
 	// reset watchdog timer
 	esp_task_wdt_reset();
-
 	unsigned long current_millis = millis();
+
+	// update this in loop() so we can change the address without having to reboot
+	read_address_select();
+
+	// read out the motor zero-degree indicator pin and stop the motor if necessary
+	motor_r_zero_switch_pin = .9 * motor_r_zero_switch_pin + .1 * ((int)digitalRead(MOTOR_R_ZERO_SWITCH_PIN));
+	if (stop_motor_R_at_zero && motor_r_zero_switch_pin > .9) {
+		enable_R = 0;
+	}
+
+	motor_l_zero_switch_pin = .9 * motor_l_zero_switch_pin + .1 * ((int)digitalRead(MOTOR_L_ZERO_SWITCH_PIN));
+	if (stop_motor_L_at_zero && motor_l_zero_switch_pin > .9) {
+		enable_L = 0;
+	}
 
 #if DEMO_MODE
 	demo_mode_loop();
+	return;
+
 #else
 
 	if (WiFi.status() != WL_CONNECTED) {
@@ -438,11 +525,11 @@ void loop() {
 	  Serial.println(WiFi.localIP());
 		WiFi.setSleep(false);
 
-		udp_time_since_last_packet = 0;/home/charl/prj/v2/robot_controller/manual_control/http_requester.py
+		udp_time_since_last_packet = 0;
 	}
 
 	// network timeout handling
-	delay(10);
+	delay(10); // do not make delay too low (or other code in loop() take too long), otherwise the estimate for udp_time_since_last_packet will be off by too much
 	udp_time_since_last_packet += 10;
 
 	if (udp_time_since_last_packet > udp_comms_timeout) {
@@ -453,29 +540,53 @@ void loop() {
 
   // report on battery voltage
 	++serial_delay_counter;
-	if (serial_delay_counter >= 10) { // every 100 ms
+	if (serial_delay_counter >= 100) { // every 100 ms
 		serial_delay_counter = 0;
 
-#if SERIAL_DEBUG
-		// Serial.print("event sent: ");
-		// Serial.println(s);
-		//
-		Serial.print("Free heap: ");
-		Serial.println(ESP.getFreeHeap());
+#if UDP_BROADCAST
+	// broadcast our presence
+	char s[80];
+	sprintf(s, "Robot A%d, IP: %s", hardware_address, WiFi.localIP().toString().c_str());
+	udp.broadcast(s);
 #endif
 
-    const float bat_volt_adc_raw = analogRead(BAT_VOLT_ADC_PIN);
-    const float bat_volt_adc = bat_volt_adc_raw * 0.0067;
-    bat_volt_adc_corrected = bat_volt_adc + (20. - bat_volt_adc) / 20.; // some ad-hoc correction of the horrible ADC nonlinearity
+#if SERIAL_DEBUG
+		Serial.print("Free heap: ");
+		Serial.println(ESP.getFreeHeap());
+		Serial.print("IP: ");
+		Serial.println(WiFi.localIP());
+#if SERIAL_DEBUG_DETAILED
+  // enabling this renders everything very, very slow
+  Serial.print("vel_R = ");
+  Serial.print(vel_R);
+  Serial.print(". vel_L = ");
+  Serial.print(vel_L);
+  Serial.print(", vel_C = ");
+  Serial.print(vel_C);
+  Serial.println();
+#if AUX_SERVO_CONTROLLER
+  Serial.print("aux_servo_pos_1 = ");
+  Serial.print(aux_pos_1);
+  Serial.print(", aux_servo_pos_2 = ");
+  Serial.print(aux_pos_2);
+  Serial.println();
+	Serial.print(", bat_volt_raw = ");
+	Serial.print(bat_volt_adc_raw);
+	Serial.println();
+	Serial.printf("%f\n", bat_volt_adc_corrected);
+#endif
+#endif
+#endif
+		read_battery_voltage();
   }
 
   // set motors
   if (vel_L > 0) {
     ledcWrite(MOTOR_L_PWM_CHANNEL_A, 0);
-    ledcWrite(MOTOR_L_PWM_CHANNEL_B, vel_L);
+    ledcWrite(MOTOR_L_PWM_CHANNEL_B, enable_L * vel_L);
   }
   else if (vel_L < 0) {
-    ledcWrite(MOTOR_L_PWM_CHANNEL_A, -vel_L);
+    ledcWrite(MOTOR_L_PWM_CHANNEL_A, -enable_L * vel_L);
     ledcWrite(MOTOR_L_PWM_CHANNEL_B, 0);
   }
   else {
@@ -485,10 +596,10 @@ void loop() {
 
   if (vel_R > 0) {
     ledcWrite(MOTOR_R_PWM_CHANNEL_A, 0);
-    ledcWrite(MOTOR_R_PWM_CHANNEL_B, vel_R);
+    ledcWrite(MOTOR_R_PWM_CHANNEL_B, enable_R * vel_R);
   }
   else if (vel_R < 0) {
-    ledcWrite(MOTOR_R_PWM_CHANNEL_A, -vel_R);
+    ledcWrite(MOTOR_R_PWM_CHANNEL_A, -enable_R * vel_R);
     ledcWrite(MOTOR_R_PWM_CHANNEL_B, 0);
   }
   else {
@@ -515,27 +626,5 @@ void loop() {
   aux_servo_2.write(aux_pos_2);
 #endif
 
-
-#if SERIAL_DEBUG_DETAILED
-  // enabling this renders everything very, very slow
-  Serial.print("vel_R = ");
-  Serial.print(vel_R);
-  Serial.print(". vel_L = ");
-  Serial.print(vel_L);
-  Serial.print(", vel_C = ");
-  Serial.print(vel_C);
-  Serial.println();
-#if AUX_SERVO_CONTROLLER
-  Serial.print("aux_servo_pos_1 = ");
-  Serial.print(aux_pos_1);
-  Serial.print(", aux_servo_pos_2 = ");
-  Serial.print(aux_pos_2);
-  Serial.println();
-	Serial.print(", bat_volt_raw = ");
-	Serial.print(bat_volt_adc_raw);
-	Serial.println();
-	Serial.printf("%f\n", bat_volt_adc_corrected);
-#endif
-#endif
 #endif
 }

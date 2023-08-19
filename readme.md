@@ -12,9 +12,10 @@ https://user-images.githubusercontent.com/1014092/205401948-c3db500c-c33b-486b-9
 ## Features
 
 - 3 bidirectional motor outputs (motors wired as H-bridge; 6 output channels in total)
-- 3 encoder input channels for motor position
 - Wireless low-latency interface via UDP
 - Battery powered with a 14.4 V Makita power tool battery
+- Flexible I/O options for motor position encoders, servo motor drivers, etc.
+- Hardware address pins allow multiple devices on a network
 - Unity VR interface
 
 
@@ -41,6 +42,10 @@ Supply rail transient response during the demo program (as in the video):
 
 
 ### Network
+
+Each controller announces its presence by sending a UDP broadcast message containing its hardware address and IP address.
+
+Packets containing control commands can then sent to a specific IP address, based on selecting a hardware address.
 
 #### UDP network benchmarks for uncongested wifi
 ![](network_benchmark/udp_benchmark_uncongested_wifi.png "Uncongested wifi")
