@@ -6,6 +6,8 @@ Heavy duty 12 V servo motor driver with Wifi link
 
 https://user-images.githubusercontent.com/1014092/205401948-c3db500c-c33b-486b-9b15-0c6e07ba4ee2.mp4
 
+![pcb](https://github.com/turingbirds/robot-driver/assets/1014092/861d7974-0ca7-40e3-9a8c-7787b7406e83)
+
 ![rear](https://user-images.githubusercontent.com/1014092/205522420-85adf3dc-d7ae-46b3-922f-ef1716646d62.jpeg)
 
 
