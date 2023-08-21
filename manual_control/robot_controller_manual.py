@@ -68,7 +68,7 @@ exercise = False
 enable = {"vel_L": False, "vel_C": False, "vel_R": False}
 
 # velocity increment
-delta_vel = 1
+delta_vel = 5
 
 # servo angle increment
 delta_ang = 5
@@ -246,7 +246,7 @@ while True:
 
 		# prune robots that are no longer sending a message
 		now = datetime.datetime.now()
-		if (now - when_added).total_seconds() > 2:
+		if (now - when_added).total_seconds() > 5:
 			to_remove_addr.append(robot_addr)
 
 	for robot_addr in to_remove_addr:
