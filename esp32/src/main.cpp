@@ -30,15 +30,8 @@ Apache License 2.0
  * Wifi
 **/
 
-// const char* ssid = "Qeske Open";
-// const char* password = "OpenWifi*";
-// const char* ssid = "v2vr";
-// const char* password = "1098217356521888";
-
-// #define WIFI_SSID "v2vr"
-// #define WIFI_PSK  "1098217356521888"
-#define WIFI_SSID "Qeske Open"
-#define WIFI_PSK  "OpenWifi*"
+#define WIFI_SSID "wifi ssid"
+#define WIFI_PSK  "wifi password"
 
 #include <Esp.h>
 #include "esp_system.h"
