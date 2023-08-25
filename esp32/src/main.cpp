@@ -341,8 +341,8 @@ void setup() {
 	  aux_servo_2.attach(AUX_SERVO_2_PIN, 500, 2400);
 #endif
 
-  pinMode(MOTOR_L_ZERO_SWITCH_PIN, INPUT_PULLDOWN);  // Set the pin as input
-	pinMode(MOTOR_R_ZERO_SWITCH_PIN, INPUT_PULLDOWN);  // Set the pin as input
+  pinMode(MOTOR_L_ZERO_SWITCH_PIN, INPUT_PULLUP);  // Set the pin as input
+	pinMode(MOTOR_R_ZERO_SWITCH_PIN, INPUT_PULLUP);  // Set the pin as input
 	//attachInterrupt(MOTOR_L_ZERO_SWITCH_PIN, MOTOR_L_PIN_CHANGE_ISR, RISING);
 	//attachInterrupt(MOTOR_R_ZERO_SWITCH_PIN, MOTOR_R_PIN_CHANGE_ISR, RISING);
 
@@ -483,12 +483,12 @@ void loop() {
 	read_address_select();
 
 	// read out the motor zero-degree indicator pin and stop the motor if necessary
-	motor_r_zero_switch_pin = .9 * motor_r_zero_switch_pin + .1 * ((int)digitalRead(MOTOR_R_ZERO_SWITCH_PIN));
+	motor_r_zero_switch_pin = .5 * motor_r_zero_switch_pin + .5 * ((int)digitalRead(MOTOR_R_ZERO_SWITCH_PIN));
 	if (stop_motor_R_at_zero && motor_r_zero_switch_pin > .9) {
 		enable_R = 0;
 	}
 
-	motor_l_zero_switch_pin = .9 * motor_l_zero_switch_pin + .1 * ((int)digitalRead(MOTOR_L_ZERO_SWITCH_PIN));
+	motor_l_zero_switch_pin = .5 * motor_l_zero_switch_pin + .5 * ((int)digitalRead(MOTOR_L_ZERO_SWITCH_PIN));
 	if (stop_motor_L_at_zero && motor_l_zero_switch_pin > .9) {
 		enable_L = 0;
 	}
